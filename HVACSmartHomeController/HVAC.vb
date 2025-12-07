@@ -102,55 +102,66 @@ Public Class HVAC
     End Sub
 
     Private Sub ReadTimer_Tick(sender As Object, e As EventArgs) Handles ReadTimer.Tick
-        ReadTemperature() ' For every timer tick, request temperature data
+        ReadTemperatureAndDigital() ' For every timer tick, request temperature data
     End Sub
 
-    Sub ReadTemperature() ' Requests temperature data (repurposed from AnalogRead3)
-        ' Clear the previous data output for a clean read
-        If SerialTextBox IsNot Nothing Then
-            SerialTextBox.Text = String.Empty
-        End If
+    Sub ReadTemperatureAndDigital()
+        If Not SerialPort1.IsOpen Then Exit Sub
 
-        ' Clear the temperature display
-        If CurrentTempTextBox IsNot Nothing Then
-            CurrentTempTextBox.Text = String.Empty
-        End If
+        ' Request temperature (still works great)
+        Dim cmdTemp(0) As Byte
+        cmdTemp(0) = &H53
+        SerialPort1.Write(cmdTemp, 0, 1)
 
-        Dim data(0) As Byte
-        data(0) = &H53 ' Command to request temperature data (assuming analog channel for temp sensor)
-        If SerialPort1.IsOpen Then
-            SerialPort1.Write(data, 0, 1)
-        End If
+        ' Request digital inputs — ONLY &H30, nothing else
+        Dim cmdDigital(0) As Byte
+        cmdDigital(0) = &H30
+        SerialPort1.Write(cmdDigital, 0, 1)
     End Sub
 
     Private Sub SerialPort1_DataReceived(sender As Object, e As SerialDataReceivedEventArgs) Handles SerialPort1.DataReceived
         Try
             Dim bytesToRead As Integer = SerialPort1.BytesToRead
-            If bytesToRead < 4 Then Exit Sub ' Not enough data yet (assuming 4-byte response as in original)
+            If bytesToRead < 4 Then Exit Sub
 
             Dim buffer(bytesToRead - 1) As Byte
             SerialPort1.Read(buffer, 0, bytesToRead)
 
-            Dim hexString As New System.Text.StringBuilder()
-            For Each b As Byte In buffer
-                hexString.Append(b.ToString("X2") & " ")
-            Next
-
-            ' Assume buffer(1) is the low byte of temperature (0-255 mapped to 0-100°C for example)
-            Dim tempValue As Integer = buffer(1) ' Repurposed from leftValue; adjust scaling as needed
-            Dim scaledTemp As Single = CSng(tempValue) / 2.55F ' Example scaling: 0-255 -> 0-100°C
-
-            ' Update the temperature text box (thread-safe)
-            WriteToTextBox(Me.CurrentTempTextBox, scaledTemp.ToString("F1") & " °C")
-
+            ' Always show raw data
+            Dim hexString As String = BitConverter.ToString(buffer).Replace("-", " ")
             Me.Invoke(Sub()
-                          SerialTextBox.AppendText(hexString.ToString() & vbCrLf)
+                          SerialTextBox.AppendText($"{DateTime.Now:HH:mm:ss.fff} → {hexString}{vbCrLf}")
+                          SerialTextBox.SelectionStart = SerialTextBox.Text.Length
+                          SerialTextBox.ScrollToCaret()
                       End Sub)
 
+            ' === ANALOG / TEMPERATURE PACKET ===
+            If buffer(0) = &H53 Then
+                Dim tempRaw As Integer = buffer(1)
+                Dim temperature As Single = tempRaw / 2.55F
+                WriteToTextBox(CurrentTempTextBox, temperature.ToString("F1") & " °C")
+                Exit Sub   ' We got temp — no need to check digital
+            End If
+
+            ' === DIGITAL INPUTS PACKET (triggered by &H30) ===
+            ' The packet that comes RIGHT after sending &H30 has digital inputs in buffer(0)
+            ' All other packets (like extra &H53 responses) will have buffer(0) = &H53 → ignored
+            Dim digitalByte As Byte = buffer(0)   ' YES — digital inputs are in the FIRST byte!
+
+            ' Convert to 8-bit binary string (D7 D6 D5 D4 D3 D2 D1 D0)
+            Dim binary As String = Convert.ToString(digitalByte, 2).PadLeft(8, "0"c)
+
+            ' Reverse so D0 is on the right (standard for hardware pinouts)
+            Dim displayBits As String = New String(binary.Reverse().ToArray())
+
+            ' Update your dedicated digital inputs textbox
+            WriteToTextBox(DigitalInputsTextBox, displayBits)
+
         Catch ex As Exception
-            Console.WriteLine($"Serial read error: {ex.Message}")
+            ' Ignore overrun, etc.
         End Try
     End Sub
+
 
     Function IsQuietBoard() As Boolean
         Dim data(0) As Byte
