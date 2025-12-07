@@ -47,6 +47,8 @@ Partial Class HVAC
         Me.OperationTextBoxLabel = New System.Windows.Forms.Label()
         Me.OperationTextBox = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
+        Me.FanTextBox = New System.Windows.Forms.TextBox()
+        Me.FanLabel = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'SerialPort1
@@ -236,15 +238,33 @@ Partial Class HVAC
         Me.Label1.AutoSize = True
         Me.Label1.Location = New System.Drawing.Point(240, 331)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(258, 30)
+        Me.Label1.Size = New System.Drawing.Size(172, 20)
         Me.Label1.TabIndex = 21
         Me.Label1.Text = "D2 Cooling D5 Heating"
+        '
+        'FanTextBox
+        '
+        Me.FanTextBox.Location = New System.Drawing.Point(917, 397)
+        Me.FanTextBox.Name = "FanTextBox"
+        Me.FanTextBox.Size = New System.Drawing.Size(100, 26)
+        Me.FanTextBox.TabIndex = 22
+        '
+        'FanLabel
+        '
+        Me.FanLabel.AutoSize = True
+        Me.FanLabel.Location = New System.Drawing.Point(913, 374)
+        Me.FanLabel.Name = "FanLabel"
+        Me.FanLabel.Size = New System.Drawing.Size(132, 30)
+        Me.FanLabel.TabIndex = 23
+        Me.FanLabel.Text = "Fan Status"
         '
         'HVAC
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1620, 884)
+        Me.Controls.Add(Me.FanLabel)
+        Me.Controls.Add(Me.FanTextBox)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.OperationTextBox)
         Me.Controls.Add(Me.OperationTextBoxLabel)
@@ -298,4 +318,6 @@ Partial Class HVAC
     Friend WithEvents OperationTextBoxLabel As Label
     Friend WithEvents OperationTextBox As TextBox
     Friend WithEvents Label1 As Label
+    Friend WithEvents FanTextBox As TextBox
+    Friend WithEvents FanLabel As Label
 End Class

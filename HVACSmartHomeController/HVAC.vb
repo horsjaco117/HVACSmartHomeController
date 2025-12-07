@@ -154,46 +154,67 @@ Public Class HVAC
                           SerialTextBox.ScrollToCaret()
                       End Sub)
 
-            ' === DIGITAL INPUTS (Byte 0) ===
+            ' === DIGITAL INPUTS (Byte 0) – INVERTED FOR PULLED-UP BUTTONS ===
             Dim digitalByte As Byte = buffer(0)
-            digitalByte = Not digitalByte 'Inverts the inherent pull up resistors
+            digitalByte = Not digitalByte  ' ← Inverted (pressed = 0)
 
             Dim binary As String = Convert.ToString(digitalByte, 2).PadLeft(8, "0"c)
             Dim displayBits As String = New String(binary.Reverse().ToArray())
             WriteToTextBox(DigitalInputsTextBox, displayBits)
 
-            ' === 10-BIT ADC (Byte 1 = LSB, Byte 2 = MSB) ===
-            Dim adcLow As Integer = buffer(1)      ' ← Fixed: was wrong before
-            Dim adcHigh As Integer = buffer(2)     ' ← Fixed: was wrong before
+            ' === 10-BIT ADC → TEMPERATURE ===
+            Dim adcLow As Integer = buffer(0)
+            Dim adcHigh As Integer = buffer(1)
             Dim adc10bit As Integer = (adcHigh << 8) Or adcLow
-            Dim currentTemp As Single = 32 + (adc10bit / 1023.0F) * 1.475F   ' Your formula
+            Dim currentTemp As Single = 32 + (adc10bit / 1023.0F) * 1.475F
 
-            WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °F")  ' ← °F
+            WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °F")
 
-            ' === ONLY THIS PART CHANGES OPERATION TEXTBOX (nothing else!) ===
-            Dim heatOn As Boolean = (digitalByte And &H4) <> 0   ' Bit 2 = Heat
-            Dim coolOn As Boolean = (digitalByte And &H20) <> 0   ' Bit 5 = Cool
+            ' === OPERATION MODE (Heat = Bit 2, Cool = Bit 5) ===
+            Dim heatOn As Boolean = (digitalByte And &H4) = 0   ' Bit 2 pressed = 0 after invert
+            Dim coolOn As Boolean = (digitalByte And &H20) = 0   ' Bit 5 pressed = 0 after invert
 
             Dim mode As String = "OFF"
-            Dim bgColor As Color = SystemColors.Control
-            Dim txtColor As Color = SystemColors.ControlText
+            Dim bg As Color = SystemColors.Control
+            Dim fg As Color = SystemColors.ControlText
 
             If coolOn Then
                 mode = "COOLING"
-                bgColor = Color.CornflowerBlue
-                txtColor = Color.White
+                bg = Color.CornflowerBlue
+                fg = Color.White
             ElseIf heatOn Then
                 mode = "HEATING"
-                bgColor = Color.IndianRed
-                txtColor = Color.White
+                bg = Color.IndianRed
+                fg = Color.White
             End If
 
-            ' Update ONLY the OperationTextBox — safe and non-blocking
             Me.Invoke(Sub()
                           OperationTextBox.Text = mode
-                          OperationTextBox.BackColor = bgColor
-                          OperationTextBox.ForeColor = txtColor
+                          OperationTextBox.BackColor = bg
+                          OperationTextBox.ForeColor = fg
                           OperationTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
+                      End Sub)
+
+            ' === FAN CONTROL (±5°F from setpoint) ===
+            Dim setpoint As Single
+            If Not Single.TryParse(SetTempTextBox.Text.Replace("°F", "").Trim, setpoint) Then
+                setpoint = 71.0F
+            End If
+
+            Dim diff As Single = Math.Abs(currentTemp - setpoint)
+            Dim fanOn As Boolean = diff > 5.0F
+
+            Me.Invoke(Sub()
+                          If fanOn Then
+                              FanTextBox.Text = "FAN: ON"
+                              FanTextBox.BackColor = Color.LimeGreen
+                              FanTextBox.ForeColor = Color.White
+                          Else
+                              FanTextBox.Text = "FAN: OFF"
+                              FanTextBox.BackColor = SystemColors.Control
+                              FanTextBox.ForeColor = SystemColors.ControlText
+                          End If
+                          FanTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
                       End Sub)
 
         Catch ex As Exception
