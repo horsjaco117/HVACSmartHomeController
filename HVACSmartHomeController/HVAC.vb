@@ -135,6 +135,7 @@ Public Class HVAC
         Dim cmd(0) As Byte
         cmd(0) = &H30
         SerialPort1.Write(cmd, 0, 1)
+        CurrentTimeTextBox.Text = DateTime.Now.ToString("hh:mm:ss tt")
     End Sub
 
     Private Sub SerialPort1_DataReceived(sender As Object, e As SerialDataReceivedEventArgs) Handles SerialPort1.DataReceived
@@ -155,28 +156,48 @@ Public Class HVAC
 
             ' === DIGITAL INPUTS (Byte 0) ===
             Dim digitalByte As Byte = buffer(0)
+            digitalByte = Not digitalByte 'Inverts the inherent pull up resistors
+
             Dim binary As String = Convert.ToString(digitalByte, 2).PadLeft(8, "0"c)
-            Dim displayBits As String = New String(binary.Reverse().ToArray())  ' D0 on right
+            Dim displayBits As String = New String(binary.Reverse().ToArray())
             WriteToTextBox(DigitalInputsTextBox, displayBits)
 
-            ' === 10-BIT ADC VALUE (Byte 1 = LSB, Byte 2 = MSB) ===
-            Dim adcLow As Integer = buffer(0)
-            Dim adcHigh As Integer = buffer(1)
-
-            ' Combine into 10-bit value (0–1023)
+            ' === 10-BIT ADC (Byte 1 = LSB, Byte 2 = MSB) ===
+            Dim adcLow As Integer = buffer(1)      ' ← Fixed: was wrong before
+            Dim adcHigh As Integer = buffer(2)     ' ← Fixed: was wrong before
             Dim adc10bit As Integer = (adcHigh << 8) Or adcLow
+            Dim currentTemp As Single = 32 + (adc10bit / 1023.0F) * 1.475F   ' Your formula
 
-            ' Convert to temperature: 0–1023 → 0.0–100.0 °C
-            'Dim currentTemp As Single = (adc10bit / 1023.0F) * 100.0F
+            WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °F")  ' ← °F
 
-            ' Or for Fahrenheit:
-            Dim currentTemp As Single = 32 + (adc10bit / 1023.0F) * 1.475F
+            ' === ONLY THIS PART CHANGES OPERATION TEXTBOX (nothing else!) ===
+            Dim heatOn As Boolean = (digitalByte And &H4) <> 0   ' Bit 2 = Heat
+            Dim coolOn As Boolean = (digitalByte And &H20) <> 0   ' Bit 5 = Cool
 
-            ' UPDATE THE TEMPERATURE BOX
-            WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °C")
+            Dim mode As String = "OFF"
+            Dim bgColor As Color = SystemColors.Control
+            Dim txtColor As Color = SystemColors.ControlText
+
+            If coolOn Then
+                mode = "COOLING"
+                bgColor = Color.CornflowerBlue
+                txtColor = Color.White
+            ElseIf heatOn Then
+                mode = "HEATING"
+                bgColor = Color.IndianRed
+                txtColor = Color.White
+            End If
+
+            ' Update ONLY the OperationTextBox — safe and non-blocking
+            Me.Invoke(Sub()
+                          OperationTextBox.Text = mode
+                          OperationTextBox.BackColor = bgColor
+                          OperationTextBox.ForeColor = txtColor
+                          OperationTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
+                      End Sub)
 
         Catch ex As Exception
-            ' Ignore buffer overruns
+            ' Never stops communication
         End Try
     End Sub
 
@@ -239,11 +260,14 @@ Public Class HVAC
     End Sub
 
     Private Sub HVAC_Load(sender As Object, e As EventArgs) Handles Me.Load
-        MsgBox("Form is loading!")
+        'MsgBox("Form is loading!")
+        CurrentTempTextBox.Text = "71.0°F"
         SetDefaults() ' Serial communication defaults
         ' AutoConnect() ' Attempt automatic connection on load
         ReadTimer.Interval = 1000 ' Set timer to poll every second (adjust as needed)
         ReadTimer.Enabled = True ' Start constant reading
     End Sub
+
+
 End Class
 

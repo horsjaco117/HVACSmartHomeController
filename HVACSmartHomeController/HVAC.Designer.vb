@@ -42,6 +42,11 @@ Partial Class HVAC
         Me.DigitalInputsTextBox = New System.Windows.Forms.TextBox()
         Me.DigitalInputTextBoxLabel = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
+        Me.CurrentTimeTextBox = New System.Windows.Forms.TextBox()
+        Me.CurrentTimeLabel = New System.Windows.Forms.Label()
+        Me.OperationTextBoxLabel = New System.Windows.Forms.Label()
+        Me.OperationTextBox = New System.Windows.Forms.TextBox()
+        Me.Label1 = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'SerialPort1
@@ -138,7 +143,7 @@ Partial Class HVAC
         Me.SerialTextBoxLabel.AutoSize = True
         Me.SerialTextBoxLabel.Location = New System.Drawing.Point(8, 52)
         Me.SerialTextBoxLabel.Name = "SerialTextBoxLabel"
-        Me.SerialTextBoxLabel.Size = New System.Drawing.Size(132, 30)
+        Me.SerialTextBoxLabel.Size = New System.Drawing.Size(88, 20)
         Me.SerialTextBoxLabel.TabIndex = 10
         Me.SerialTextBoxLabel.Text = "Serial Data"
         '
@@ -181,7 +186,7 @@ Partial Class HVAC
         Me.DigitalInputTextBoxLabel.AutoSize = True
         Me.DigitalInputTextBoxLabel.Location = New System.Drawing.Point(12, 308)
         Me.DigitalInputTextBoxLabel.Name = "DigitalInputTextBoxLabel"
-        Me.DigitalInputTextBoxLabel.Size = New System.Drawing.Size(153, 30)
+        Me.DigitalInputTextBoxLabel.Size = New System.Drawing.Size(102, 20)
         Me.DigitalInputTextBoxLabel.TabIndex = 15
         Me.DigitalInputTextBoxLabel.Text = "Digital Inputs"
         '
@@ -194,11 +199,57 @@ Partial Class HVAC
         Me.Label2.TabIndex = 16
         Me.Label2.Text = "Label2"
         '
+        'CurrentTimeTextBox
+        '
+        Me.CurrentTimeTextBox.Location = New System.Drawing.Point(917, 62)
+        Me.CurrentTimeTextBox.Name = "CurrentTimeTextBox"
+        Me.CurrentTimeTextBox.Size = New System.Drawing.Size(100, 26)
+        Me.CurrentTimeTextBox.TabIndex = 17
+        '
+        'CurrentTimeLabel
+        '
+        Me.CurrentTimeLabel.AutoSize = True
+        Me.CurrentTimeLabel.Location = New System.Drawing.Point(913, 30)
+        Me.CurrentTimeLabel.Name = "CurrentTimeLabel"
+        Me.CurrentTimeLabel.Size = New System.Drawing.Size(100, 20)
+        Me.CurrentTimeLabel.TabIndex = 18
+        Me.CurrentTimeLabel.Text = "Current Time"
+        '
+        'OperationTextBoxLabel
+        '
+        Me.OperationTextBoxLabel.AutoSize = True
+        Me.OperationTextBoxLabel.Location = New System.Drawing.Point(913, 266)
+        Me.OperationTextBoxLabel.Name = "OperationTextBoxLabel"
+        Me.OperationTextBoxLabel.Size = New System.Drawing.Size(79, 20)
+        Me.OperationTextBoxLabel.TabIndex = 19
+        Me.OperationTextBoxLabel.Text = "Operation"
+        '
+        'OperationTextBox
+        '
+        Me.OperationTextBox.Location = New System.Drawing.Point(917, 292)
+        Me.OperationTextBox.Name = "OperationTextBox"
+        Me.OperationTextBox.Size = New System.Drawing.Size(100, 26)
+        Me.OperationTextBox.TabIndex = 20
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(240, 331)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(258, 30)
+        Me.Label1.TabIndex = 21
+        Me.Label1.Text = "D2 Cooling D5 Heating"
+        '
         'HVAC
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1620, 884)
+        Me.Controls.Add(Me.Label1)
+        Me.Controls.Add(Me.OperationTextBox)
+        Me.Controls.Add(Me.OperationTextBoxLabel)
+        Me.Controls.Add(Me.CurrentTimeLabel)
+        Me.Controls.Add(Me.CurrentTimeTextBox)
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.DigitalInputTextBoxLabel)
         Me.Controls.Add(Me.DigitalInputsTextBox)
@@ -242,4 +293,9 @@ Partial Class HVAC
     Friend WithEvents DigitalInputsTextBox As TextBox
     Friend WithEvents DigitalInputTextBoxLabel As Label
     Friend WithEvents Label2 As Label
+    Friend WithEvents CurrentTimeTextBox As TextBox
+    Friend WithEvents CurrentTimeLabel As Label
+    Friend WithEvents OperationTextBoxLabel As Label
+    Friend WithEvents OperationTextBox As TextBox
+    Friend WithEvents Label1 As Label
 End Class
