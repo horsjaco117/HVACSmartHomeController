@@ -101,22 +101,40 @@ Public Class HVAC
         write()
     End Sub
 
-    Private Sub ReadTimer_Tick(sender As Object, e As EventArgs) Handles ReadTimer.Tick
-        ReadTemperatureAndDigital() ' For every timer tick, request temperature data
+
+
+    Sub RequestAllAnalogInputs()
+        If Not SerialPort1.IsOpen Then Exit Sub
+
+        Dim cmd(0) As Byte
+        cmd(0) = &H51        ' This command returns ALL analog channels (8 values)
+        SerialPort1.Write(cmd, 0, 1)
     End Sub
 
     Sub ReadTemperatureAndDigital()
         If Not SerialPort1.IsOpen Then Exit Sub
 
-        ' Request temperature (still works great)
-        Dim cmdTemp(0) As Byte
-        cmdTemp(0) = &H53
-        SerialPort1.Write(cmdTemp, 0, 1)
+        ' Request analog (this gives you TWO channels — AN0 and AN1)
+        Dim cmdAnalog(0) As Byte
+        cmdAnalog(0) = &H53
+        SerialPort1.Write(cmdAnalog, 0, 1)
 
-        ' Request digital inputs — ONLY &H30, nothing else
+        ' Request digital inputs
         Dim cmdDigital(0) As Byte
         cmdDigital(0) = &H30
         SerialPort1.Write(cmdDigital, 0, 1)
+    End Sub
+
+    ' Add this at the very top of your class (with the other fields)
+    Private ReadAnalogNext As Boolean = True   ' True = send &H53, False = send &H30
+
+    Private Sub ReadTimer_Tick(sender As Object, e As EventArgs) Handles ReadTimer.Tick
+        If Not SerialPort1.IsOpen Then Exit Sub
+
+        ' ONLY send &H30 — this gives us BOTH digital + analog in one packet!
+        Dim cmd(0) As Byte
+        cmd(0) = &H30
+        SerialPort1.Write(cmd, 0, 1)
     End Sub
 
     Private Sub SerialPort1_DataReceived(sender As Object, e As SerialDataReceivedEventArgs) Handles SerialPort1.DataReceived
@@ -127,38 +145,38 @@ Public Class HVAC
             Dim buffer(bytesToRead - 1) As Byte
             SerialPort1.Read(buffer, 0, bytesToRead)
 
-            ' Always show raw data
-            Dim hexString As String = BitConverter.ToString(buffer).Replace("-", " ")
+            ' Show raw packet
+            Dim hex As String = BitConverter.ToString(buffer).Replace("-", " ")
             Me.Invoke(Sub()
-                          SerialTextBox.AppendText($"{DateTime.Now:HH:mm:ss.fff} → {hexString}{vbCrLf}")
+                          SerialTextBox.AppendText($"{DateTime.Now:HH:mm:ss.fff} → {hex}{vbCrLf}")
                           SerialTextBox.SelectionStart = SerialTextBox.Text.Length
                           SerialTextBox.ScrollToCaret()
                       End Sub)
 
-            ' === ANALOG / TEMPERATURE PACKET ===
-            If buffer(0) = &H53 Then
-                Dim tempRaw As Integer = buffer(1)
-                Dim temperature As Single = tempRaw / 2.55F
-                WriteToTextBox(CurrentTempTextBox, temperature.ToString("F1") & " °C")
-                Exit Sub   ' We got temp — no need to check digital
-            End If
-
-            ' === DIGITAL INPUTS PACKET (triggered by &H30) ===
-            ' The packet that comes RIGHT after sending &H30 has digital inputs in buffer(0)
-            ' All other packets (like extra &H53 responses) will have buffer(0) = &H53 → ignored
-            Dim digitalByte As Byte = buffer(0)   ' YES — digital inputs are in the FIRST byte!
-
-            ' Convert to 8-bit binary string (D7 D6 D5 D4 D3 D2 D1 D0)
+            ' === DIGITAL INPUTS (Byte 0) ===
+            Dim digitalByte As Byte = buffer(0)
             Dim binary As String = Convert.ToString(digitalByte, 2).PadLeft(8, "0"c)
-
-            ' Reverse so D0 is on the right (standard for hardware pinouts)
-            Dim displayBits As String = New String(binary.Reverse().ToArray())
-
-            ' Update your dedicated digital inputs textbox
+            Dim displayBits As String = New String(binary.Reverse().ToArray())  ' D0 on right
             WriteToTextBox(DigitalInputsTextBox, displayBits)
 
+            ' === 10-BIT ADC VALUE (Byte 1 = LSB, Byte 2 = MSB) ===
+            Dim adcLow As Integer = buffer(0)
+            Dim adcHigh As Integer = buffer(1)
+
+            ' Combine into 10-bit value (0–1023)
+            Dim adc10bit As Integer = (adcHigh << 8) Or adcLow
+
+            ' Convert to temperature: 0–1023 → 0.0–100.0 °C
+            'Dim currentTemp As Single = (adc10bit / 1023.0F) * 100.0F
+
+            ' Or for Fahrenheit:
+            Dim currentTemp As Single = 32 + (adc10bit / 1023.0F) * 1.475F
+
+            ' UPDATE THE TEMPERATURE BOX
+            WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °C")
+
         Catch ex As Exception
-            ' Ignore overrun, etc.
+            ' Ignore buffer overruns
         End Try
     End Sub
 
@@ -177,6 +195,7 @@ Public Class HVAC
         End If
         Return False
     End Function
+
 
     Public Sub WriteToTextBox(ByVal targetTextBox As System.Windows.Forms.TextBox, ByVal content As String)
         ' Check if the call is coming from a different thread than the one that created the control
