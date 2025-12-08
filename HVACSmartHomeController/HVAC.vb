@@ -168,7 +168,13 @@ Public Class HVAC
             Dim adc10bit As Integer = (adcHigh << 8) Or adcLow
             Dim currentTemp As Single = 32 + (adc10bit / 1023.0F) * 1.475F
 
+            Dim adcLow1 As Integer = buffer(2)
+            Dim adcHigh1 As Integer = buffer(3)
+            Dim adc10bit1 As Integer = (adcHigh1 << 8) Or adcLow1
+            Dim hardwareTemp As Single = 32 + (adc10bit1 / 1023.0F) * 1.475F
+
             WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °F")
+            WriteToTextBox(HardwareTextBox, hardwareTemp.ToString("F1") & " °F")
 
             ' === OPERATION MODE (Heat = Bit 2, Cool = Bit 5) ===
             Dim heatOn As Boolean = (digitalByte And &H4) = 0   ' Bit 2 pressed = 0 after invert
@@ -282,13 +288,15 @@ Public Class HVAC
 
     Private Sub HVAC_Load(sender As Object, e As EventArgs) Handles Me.Load
         'MsgBox("Form is loading!")
+
         CurrentTempTextBox.Text = "71.0°F"
         SetDefaults() ' Serial communication defaults
         ' AutoConnect() ' Attempt automatic connection on load
-        ReadTimer.Interval = 1000 ' Set timer to poll every second (adjust as needed)
+        ReadTimer.Interval = 10 ' Set timer to poll every second (adjust as needed)
         ReadTimer.Enabled = True ' Start constant reading
+        Me.Font = New Font("Segoe UI", 11, FontStyle.Bold)
+        Me.BackColor = Color.FromArgb(244, 121, 32)
     End Sub
 
 
 End Class
-
