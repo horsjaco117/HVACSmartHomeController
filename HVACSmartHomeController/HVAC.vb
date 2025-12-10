@@ -177,8 +177,8 @@ Public Class HVAC
             WriteToTextBox(HardwareTextBox, hardwareTemp.ToString("F1") & " °F")
 
             ' === OPERATION MODE (Heat = Bit 2, Cool = Bit 5) ===
-            Dim heatOn As Boolean = (digitalByte And &H4) = 0   ' Bit 2 pressed = 0 after invert
-            Dim coolOn As Boolean = (digitalByte And &H20) = 0   ' Bit 5 pressed = 0 after invert
+            Dim heatOn As Boolean = (digitalByte And &H4) <> 0   ' Bit 2 pressed = 0 after invert
+            Dim coolOn As Boolean = (digitalByte And &H20) <> 0   ' Bit 5 pressed = 0 after invert
 
             Dim mode As String = "OFF"
             Dim bg As Color = SystemColors.Control
