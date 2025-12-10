@@ -13,7 +13,16 @@ Imports System.Runtime.CompilerServices
 Imports System.IO.Ports
 Imports System.Net.Configuration
 
+'TODO
+'ADD LATCHING TO THE COOLING AND HEATING 
+'
+
 Public Class HVAC
+    Private Const SETTINGS_FILE As String = "HVAC Settings.txt"
+
+    Private Function GetSettingsPath() As String
+        Return System.IO.Path.Combine(Application.StartupPath, SETTINGS_FILE)
+    End Function
 
 
     ' Serial Communications----------------------------------------------------------
@@ -280,6 +289,7 @@ Public Class HVAC
     ' Event Handlers-----------------------------------------
     Private Sub SetButton_Click(sender As Object, e As EventArgs) Handles SetButton.Click
         SendSetpoint() ' Send the setpoint when button clicked
+        SaveSettings()
     End Sub
 
     Private Sub ExitButton_Click(sender As Object, e As EventArgs) Handles ExitButton.Click
@@ -296,7 +306,91 @@ Public Class HVAC
         ReadTimer.Enabled = True ' Start constant reading
         Me.Font = New Font("Segoe UI", 11, FontStyle.Bold)
         Me.BackColor = Color.FromArgb(244, 121, 32)
+
+        LoadSettings()
+
+        If PortsComboBoxHasSelection() Then
+            connect()
+            write()
+
+        End If
+
+    End Sub
+
+    Private Function PortsComboBoxHasSelection() As Boolean
+        Return PortsComboBox.SelectedItem IsNot Nothing AndAlso Not String.IsNullOrEmpty(PortsComboBox.SelectedItem.ToString())
+    End Function
+
+    Private Sub SaveSettings()
+        Try
+            Dim lines As New List(Of String)
+
+            ' Save the setpoint exactly as the user sees/types it
+            lines.Add(SetTempTextBox.Text.Trim())
+
+            ' Save the selected COM port (or empty string if nothing selected)
+            If PortsComboBox.SelectedItem IsNot Nothing Then
+                lines.Add(PortsComboBox.SelectedItem.ToString())
+            Else
+                lines.Add("")
+            End If
+
+            System.IO.File.WriteAllLines(GetSettingsPath(), lines)
+        Catch ex As Exception
+            ' Fail silently – never crash the app just because settings won't save
+        End Try
+    End Sub
+
+    Private Sub LoadSettings()
+        Dim path As String = GetSettingsPath()
+        If Not System.IO.File.Exists(path) Then Exit Sub
+
+        Try
+            Dim lines() As String = System.IO.File.ReadAllLines(path)
+
+            ' Line 0 = Setpoint
+            If lines.Length > 0 AndAlso Not String.IsNullOrWhiteSpace(lines(0)) Then
+                SetTempTextBox.Text = lines(0).Trim()
+            End If
+
+            ' Line 1 = COM port
+            If lines.Length > 1 AndAlso Not String.IsNullOrWhiteSpace(lines(1)) Then
+                Dim savedPort As String = lines(1).Trim()
+                For i As Integer = 0 To PortsComboBox.Items.Count - 1
+                    If PortsComboBox.Items(i).ToString() = savedPort Then
+                        PortsComboBox.SelectedIndex = i
+                        Exit For
+                    End If
+                Next
+            End If
+
+        Catch ex As Exception
+            ' Corrupted file? Just ignore and start fresh
+        End Try
+    End Sub
+
+    ' Helper: check if combo box already has this port (avoids errors on missing COM ports)
+    Private Function PortsBoxContains(portName As String) As Boolean
+    For Each item In PortsComboBox.Items
+        If item.ToString() = portName Then Return True
+    Next
+    Return False
+End Function
+
+    Private Sub ExitToolStripButton_Click(sender As Object, e As EventArgs) Handles ExitToolStripButton.Click
+        Me.Close()
+    End Sub
+
+    Private Sub SetTempTextBox_TextChanged(sender As Object, e As EventArgs) Handles SetTempTextBox.TextChanged
+        SaveSettings()
+    End Sub
+
+    Private Sub PortsComboBox_SelectedIndexChanged(sender As Object, e As EventArgs) Handles PortsComboBox.SelectedIndexChanged
+        SaveSettings()
     End Sub
 
 
+    Private Sub CommunicationToolStripButton_Click(sender As Object, e As EventArgs) Handles CommunicationToolStripButton.Click
+
+    End Sub
 End Class

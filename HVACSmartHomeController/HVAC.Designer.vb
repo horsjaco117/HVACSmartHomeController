@@ -23,6 +23,7 @@ Partial Class HVAC
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(HVAC))
         Me.SerialPort1 = New System.IO.Ports.SerialPort(Me.components)
         Me.SerialPortsComboBox = New System.Windows.Forms.ComboBox()
         Me.SerialPortComboLabel = New System.Windows.Forms.Label()
@@ -53,8 +54,13 @@ Partial Class HVAC
         Me.PictureBox2 = New System.Windows.Forms.PictureBox()
         Me.HardwareTextBox = New System.Windows.Forms.TextBox()
         Me.HadwareTempTextBoxLabel = New System.Windows.Forms.Label()
+        Me.ToolStrip1 = New System.Windows.Forms.ToolStrip()
+        Me.CommunicationToolStripButton = New System.Windows.Forms.ToolStripButton()
+        Me.ExitToolStripButton = New System.Windows.Forms.ToolStripButton()
+        Me.SaveSettingsToolStripButton = New System.Windows.Forms.ToolStripButton()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.ToolStrip1.SuspendLayout()
         Me.SuspendLayout()
         '
         'SerialPort1
@@ -293,15 +299,53 @@ Partial Class HVAC
         Me.HadwareTempTextBoxLabel.AutoSize = True
         Me.HadwareTempTextBoxLabel.Location = New System.Drawing.Point(913, 112)
         Me.HadwareTempTextBoxLabel.Name = "HadwareTempTextBoxLabel"
-        Me.HadwareTempTextBoxLabel.Size = New System.Drawing.Size(260, 30)
+        Me.HadwareTempTextBoxLabel.Size = New System.Drawing.Size(173, 20)
         Me.HadwareTempTextBoxLabel.TabIndex = 27
         Me.HadwareTempTextBoxLabel.Text = "Hardware Temperature"
+        '
+        'ToolStrip1
+        '
+        Me.ToolStrip1.ImageScalingSize = New System.Drawing.Size(24, 24)
+        Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CommunicationToolStripButton, Me.ExitToolStripButton, Me.SaveSettingsToolStripButton})
+        Me.ToolStrip1.Location = New System.Drawing.Point(0, 0)
+        Me.ToolStrip1.Name = "ToolStrip1"
+        Me.ToolStrip1.Size = New System.Drawing.Size(1620, 33)
+        Me.ToolStrip1.TabIndex = 28
+        Me.ToolStrip1.Text = "ToolStrip1"
+        '
+        'CommunicationToolStripButton
+        '
+        Me.CommunicationToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.CommunicationToolStripButton.Image = CType(resources.GetObject("CommunicationToolStripButton.Image"), System.Drawing.Image)
+        Me.CommunicationToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.CommunicationToolStripButton.Name = "CommunicationToolStripButton"
+        Me.CommunicationToolStripButton.Size = New System.Drawing.Size(34, 28)
+        Me.CommunicationToolStripButton.Text = "COM Setup"
+        '
+        'ExitToolStripButton
+        '
+        Me.ExitToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.ExitToolStripButton.Image = CType(resources.GetObject("ExitToolStripButton.Image"), System.Drawing.Image)
+        Me.ExitToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.ExitToolStripButton.Name = "ExitToolStripButton"
+        Me.ExitToolStripButton.Size = New System.Drawing.Size(34, 28)
+        Me.ExitToolStripButton.Text = "Exit"
+        '
+        'SaveSettingsToolStripButton
+        '
+        Me.SaveSettingsToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.SaveSettingsToolStripButton.Image = CType(resources.GetObject("SaveSettingsToolStripButton.Image"), System.Drawing.Image)
+        Me.SaveSettingsToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.SaveSettingsToolStripButton.Name = "SaveSettingsToolStripButton"
+        Me.SaveSettingsToolStripButton.Size = New System.Drawing.Size(34, 28)
+        Me.SaveSettingsToolStripButton.Text = "ToolStripButton3"
         '
         'HVAC
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1620, 884)
+        Me.Controls.Add(Me.ToolStrip1)
         Me.Controls.Add(Me.HadwareTempTextBoxLabel)
         Me.Controls.Add(Me.HardwareTextBox)
         Me.Controls.Add(Me.PictureBox2)
@@ -334,6 +378,8 @@ Partial Class HVAC
         Me.Text = "HVAC"
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.ToolStrip1.ResumeLayout(False)
+        Me.ToolStrip1.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -369,4 +415,8 @@ Partial Class HVAC
     Friend WithEvents PictureBox2 As PictureBox
     Friend WithEvents HardwareTextBox As TextBox
     Friend WithEvents HadwareTempTextBoxLabel As Label
+    Friend WithEvents ToolStrip1 As ToolStrip
+    Friend WithEvents CommunicationToolStripButton As ToolStripButton
+    Friend WithEvents ExitToolStripButton As ToolStripButton
+    Friend WithEvents SaveSettingsToolStripButton As ToolStripButton
 End Class
