@@ -142,17 +142,17 @@ Public Class HVAC
     End Sub
 
     Private Sub COMButton_Click(sender As Object, e As EventArgs) Handles COMButton.Click
-        connect()
-        If SerialPort1.IsOpen Then
-            write()  ' Send &HF0 handshake
-            Sleep(200)
-            If IsQuietBoard() Then
-                ConnectionStatusLabel.Text = $"Connected manually on {SerialPort1.PortName}"
-            Else
-                SerialPort1.Close()
-                ConnectionStatusLabel.Text = "Wrong device detected or no response. Disconnected."
-            End If
-        End If
+        'connect()
+        'If SerialPort1.IsOpen Then
+        '    write()  ' Send &HF0 handshake
+        '    Sleep(200)
+        '    If IsQuietBoard() Then
+        '        ConnectionStatusLabel.Text = $"Connected manually on {SerialPort1.PortName}"
+        '    Else
+        '        SerialPort1.Close()
+        '        ConnectionStatusLabel.Text = "Wrong device detected or no response. Disconnected."
+        '    End If
+        'End If
     End Sub
 
 
@@ -161,7 +161,7 @@ Public Class HVAC
         If Not SerialPort1.IsOpen Then Exit Sub
 
         Dim cmd(0) As Byte
-        cmd(0) = &H51        ' This command returns ALL analog channels (8 values)
+        cmd(0) = &H30        ' This command returns ALL analog channels (8 values)
         SerialPort1.Write(cmd, 0, 1)
     End Sub
 
@@ -490,11 +490,11 @@ Public Class HVAC
                 Exit Sub
             End If
 
-            Dim data(1) As Byte
-            data(0) = &H30 ' Invented command byte for setting temperature (adjust to actual protocol)
-            data(1) = CByte(setpoint * 2.55F) ' Scale 0-100 to 0-255 byte
-            send(data)
-            ' MsgBox("Setpoint sent successfully.")
+            '    Dim data(1) As Byte
+            '    data(0) = &H30 ' Invented command byte for setting temperature (adjust to actual protocol)
+            '    data(1) = CByte(setpoint * 2.55F) ' Scale 0-100 to 0-255 byte
+            '    send(data)
+            '    ' MsgBox("Setpoint sent successfully.")
         Catch ex As Exception
             MsgBox($"Error sending setpoint: {ex.Message}")
         End Try
@@ -518,7 +518,7 @@ Public Class HVAC
     Private Sub HVAC_Load(sender As Object, e As EventArgs) Handles Me.Load
         'MsgBox("Form is loading!")
 
-        CurrentTempTextBox.Text = "71.0°F"
+        '        CurrentTempTextBox.Text = "71.0°F"
         SetDefaults() ' Serial communication defaults
         ' AutoConnect() ' Attempt automatic connection on load
         ReadTimer.Interval = 100 ' Set timer to poll every second (adjust as needed)
@@ -527,6 +527,9 @@ Public Class HVAC
         Me.BackColor = Color.FromArgb(244, 121, 32)
 
         LoadSettings()
+        IncrementTemperatureHigh(SetTempTextBox, 0)
+        IncrementTemperatureLow(LowTempTextBox, 0)
+
 
         If PortsComboBoxHasSelection() Then
             connect()
@@ -627,11 +630,11 @@ Public Class HVAC
                 Exit Sub
             End If
 
-            Dim data(1) As Byte
-            data(0) = &H61 ' <--- ASSUMED COMMAND for Low Temp. Change this if needed.
-            data(1) = CByte(lowSetpoint * 2.55F) ' Scale 0-100 to 0-255 byte
+            'Dim data(1) As Byte
+            'data(0) = &H30 ' <--- ASSUMED COMMAND for Low Temp. Change this if needed.
+            'data(1) = CByte(lowSetpoint * 2.55F) ' Scale 0-100 to 0-255 byte
 
-            send(data)
+            'send(data)
         Catch ex As Exception
             ' Handle parsing errors if box is empty
         End Try
@@ -662,26 +665,52 @@ Public Class HVAC
     End Sub
 
     Private Sub IncrementHighTempButton_Click(sender As Object, e As EventArgs) Handles IncrementHighTempButton.Click
-        IncrementTemperature(SetTempTextBox, 0.5F)
+        IncrementTemperatureHigh(SetTempTextBox, 0.5F)
     End Sub
 
     Private Sub IncrementLowTempButton_Click(sender As Object, e As EventArgs) Handles IncrementLowTempButton.Click
-        IncrementTemperature(LowTempTextBox, 0.5F)
+        IncrementTemperatureLow(LowTempTextBox, 0.5F)
     End Sub
 
     Private Sub DecrementLowTempButton_Click(sender As Object, e As EventArgs) Handles DecrementLowTempButton.Click
-        IncrementTemperature(LowTempTextBox, -0.5F)
+        IncrementTemperatureLow(LowTempTextBox, -0.5F)
     End Sub
     Private Sub DecrementHighTempButton_Click(sender As Object, e As EventArgs) Handles DecrementHighTempButton.Click
-        IncrementTemperature(SetTempTextBox, 0.5F)
+        IncrementTemperatureHigh(SetTempTextBox, 0.5F)
+    End Sub
+
+    Private Sub IncrementTemperatureHigh(ByVal targetTextBox As System.Windows.Forms.TextBox, ByVal change As Single)
+        Dim currentTemp As Single = 0.0F
+
+        ' 1. Safely try to parse the current value. If it fails, use the default (0.0F).
+        If Not Single.TryParse(targetTextBox.Text, currentTemp) Then
+            currentTemp = 90.0F ' Use a sensible default if the box is empty or invalid
+        End If
+
+        ' 2. Calculate the new temperature
+        Dim newTemp As Single = currentTemp + change
+
+        ' 3. Optional: Implement min/max limits (e.g., keep temperature between 50°F and 90°F)
+        If newTemp < 50.0F Then newTemp = 50.0F
+        If newTemp > 90.0F Then newTemp = 90.0F
+
+        ' 4. Update the TextBox with the new value, formatted to one decimal place.
+        WriteToTextBox(targetTextBox, newTemp.ToString("F1"))
+
+        ' 5. Trigger the setpoint command to the hardware and save the setting
+        If targetTextBox Is SetTempTextBox Then
+            SendSetpoint()
+        ElseIf targetTextBox Is LowTempTextBox Then
+            SendLowSetpoint()
+        End If
+
+        SaveSettings()
     End Sub
 
 
 
 
-
-
-    Private Sub IncrementTemperature(ByVal targetTextBox As System.Windows.Forms.TextBox, ByVal change As Single)
+    Private Sub IncrementTemperatureLow(ByVal targetTextBox As System.Windows.Forms.TextBox, ByVal change As Single)
         Dim currentTemp As Single = 0.0F
 
         ' 1. Safely try to parse the current value. If it fails, use the default (0.0F).
