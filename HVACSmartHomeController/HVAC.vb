@@ -36,7 +36,7 @@ Public Class HVAC
     Private Const SETTINGS_FILE As String = "HVAC Settings.txt"
 
     'Compliant with quiet board
-    Private WithEvents AutoDetectTimer As New Timer()
+    Private WithEvents DetectTimer As New Timer()
     Private previouslyAvailablePorts As New List(Of String)
     Private hardwareVerified As Boolean = False
 
@@ -170,7 +170,7 @@ Public Class HVAC
 
         ' Request analog (this gives you TWO channels — AN0 and AN1)
         Dim cmdAnalog(0) As Byte
-        cmdAnalog(0) = &H53
+        cmdAnalog(0) = &H30
         SerialPort1.Write(cmdAnalog, 0, 1)
 
         ' Request digital inputs
@@ -194,7 +194,7 @@ Public Class HVAC
         ' IsQuietBoard()
     End Sub
 
-    Private Sub DetectTimer_Tick(sender As Object, e As EventArgs) Handles DetectTimer.Tick
+    Private Sub DetectTimer_Tick(sender As Object, e As EventArgs)
         If SerialPort1.IsOpen Then
             ' Already connected to verified hardware → skip scanning
             Return
@@ -322,12 +322,12 @@ Public Class HVAC
                 Dim adcLow0 As Integer = buffer(2)
                 Dim adcHigh0 As Integer = buffer(1)
                 Dim adc10bit0 As Integer = (adcHigh0 << 8) Or adcLow0
-                Dim currentTemp As Single = 32 + (adc10bit0 / 1023.0F) * 1.475F
+                Dim currentTemp As Single = 32 + (adc10bit0 / 1023.0F) * 0.95F
 
                 Dim adcLow1 As Integer = buffer(4)
                 Dim adcHigh1 As Integer = buffer(3)  ' Assuming packet has at least 5 bytes
                 Dim adc10bit1 As Integer = (adcHigh1 << 8) Or adcLow1
-                Dim hardwareTemp As Single = 32 + (adc10bit1 / 1023.0F) * 1.475F
+                Dim hardwareTemp As Single = 40 + (adc10bit1 / 1023.0F) * 0.95F
 
                 WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °F")
                 WriteToTextBox(HardwareTextBox, hardwareTemp.ToString("F1") & " °F")
@@ -350,10 +350,10 @@ Public Class HVAC
                         mode = "HEATING"
                         bg = Color.IndianRed
                         fg = Color.White
-                    ElseIf fanLatched Then
-                        mode = "FAN ONLY"
-                        bg = Color.MediumSeaGreen
-                        fg = Color.White
+                        'ElseIf fanLatched Then
+                        '    mode = "FAN ONLY"
+                        '    bg = Color.MediumSeaGreen
+                        '    fg = Color.White
                     End If
                 End If
 
@@ -363,6 +363,27 @@ Public Class HVAC
                               OperationTextBox.ForeColor = fg
                               OperationTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
                           End Sub)
+
+                Dim highLimit As Single
+                Dim lowLimit As Single
+
+                ' Parse the text boxes safely
+                If Single.TryParse(SetTempTextBox.Text, highLimit) AndAlso
+       Single.TryParse(LowTempTextBox.Text, lowLimit) Then
+
+                    Me.Invoke(Sub()
+                                  If currentTemp > highLimit Then
+                                      ' Visual alarm for High Temp
+                                      CurrentTempTextBox.ForeColor = Color.Red
+                                  ElseIf currentTemp < lowLimit Then
+                                      ' Visual alarm for Low Temp
+                                      CurrentTempTextBox.ForeColor = Color.Blue
+                                  Else
+                                      ' Normal Range
+                                      CurrentTempTextBox.ForeColor = Color.Black
+                                  End If
+                              End Sub)
+                End If
 
                 ' === UPDATE FAN TEXTBOX (Manual latch only) ===
                 Me.Invoke(Sub()
@@ -470,10 +491,10 @@ Public Class HVAC
             End If
 
             Dim data(1) As Byte
-            data(0) = &H60 ' Invented command byte for setting temperature (adjust to actual protocol)
+            data(0) = &H30 ' Invented command byte for setting temperature (adjust to actual protocol)
             data(1) = CByte(setpoint * 2.55F) ' Scale 0-100 to 0-255 byte
             send(data)
-            MsgBox("Setpoint sent successfully.")
+            ' MsgBox("Setpoint sent successfully.")
         Catch ex As Exception
             MsgBox($"Error sending setpoint: {ex.Message}")
         End Try
@@ -481,7 +502,12 @@ Public Class HVAC
 
     ' Event Handlers-----------------------------------------
     Private Sub SetButton_Click(sender As Object, e As EventArgs) Handles SetButton.Click
-        SendSetpoint() ' Send the setpoint when button clicked
+        ' Send both thresholds when the user clicks Set
+
+    End Sub
+
+    ' Add this handle to autosave when user types in LowTempTextBox
+    Private Sub LowTempTextBox_TextChanged(sender As Object, e As EventArgs) Handles LowTempTextBox.TextChanged
         SaveSettings()
     End Sub
 
@@ -521,8 +547,8 @@ Public Class HVAC
         SerialPort1.Write(start, 0, 10)
         previouslyAvailablePorts = SerialPort.GetPortNames().ToList()
 
-        AutoDetectTimer.Interval = 3000  ' Check every 3 seconds
-        AutoDetectTimer.Start()
+        DetectTimer.Interval = 3000  ' Check every 3 seconds
+        DetectTimer.Start()
     End Sub
 
     Private Function PortsComboBoxHasSelection() As Boolean
@@ -533,10 +559,13 @@ Public Class HVAC
         Try
             Dim lines As New List(Of String)
 
-            ' Save the setpoint exactly as the user sees/types it
+            ' 1. Save High Temp (SetTempTextBox)
             lines.Add(SetTempTextBox.Text.Trim())
 
-            ' Save the selected COM port (or empty string if nothing selected)
+            ' 2. Save Low Temp (LowTempTextBox) - NEW
+            lines.Add(LowTempTextBox.Text.Trim())
+
+            ' 3. Save the selected COM port
             If PortsComboBox.SelectedItem IsNot Nothing Then
                 lines.Add(PortsComboBox.SelectedItem.ToString())
             Else
@@ -545,7 +574,7 @@ Public Class HVAC
 
             System.IO.File.WriteAllLines(GetSettingsPath(), lines)
         Catch ex As Exception
-            ' Fail silently – never crash the app just because settings won't save
+            ' Fail silently
         End Try
     End Sub
 
@@ -556,14 +585,23 @@ Public Class HVAC
         Try
             Dim lines() As String = System.IO.File.ReadAllLines(path)
 
-            ' Line 0 = Setpoint
+            ' Line 0 = High Setpoint
             If lines.Length > 0 AndAlso Not String.IsNullOrWhiteSpace(lines(0)) Then
                 SetTempTextBox.Text = lines(0).Trim()
             End If
 
-            ' Line 1 = COM port
-            If lines.Length > 1 AndAlso Not String.IsNullOrWhiteSpace(lines(1)) Then
-                Dim savedPort As String = lines(1).Trim()
+            ' Line 1 = Low Setpoint - NEW
+            ' We check if the line looks like a number to avoid loading an old COM port setting into the temp box
+            Dim d As Double
+            If lines.Length > 1 AndAlso Double.TryParse(lines(1), d) Then
+                LowTempTextBox.Text = lines(1).Trim()
+            End If
+
+            ' Line 2 = COM port (Moved from index 1 to 2)
+            ' We look at the last line or index 2 to find the port
+            Dim portIndex As Integer = 2
+            If lines.Length > portIndex AndAlso Not String.IsNullOrWhiteSpace(lines(portIndex)) Then
+                Dim savedPort As String = lines(portIndex).Trim()
                 For i As Integer = 0 To PortsComboBox.Items.Count - 1
                     If PortsComboBox.Items(i).ToString() = savedPort Then
                         PortsComboBox.SelectedIndex = i
@@ -573,10 +611,31 @@ Public Class HVAC
             End If
 
         Catch ex As Exception
-            ' Corrupted file? Just ignore and start fresh
+            ' Corrupted file or format mismatch? Ignore.
         End Try
     End Sub
 
+    ' New sub to send LOW setpoint to the thermostat device
+    Sub SendLowSetpoint()
+        Try
+            Dim lowSetpoint As Integer = CInt(LowTempTextBox.Text)
+
+            ' Basic validation: Low should not be higher than High
+            Dim highSetpoint As Integer = CInt(SetTempTextBox.Text)
+            If lowSetpoint >= highSetpoint Then
+                MsgBox("Low threshold must be lower than High threshold.")
+                Exit Sub
+            End If
+
+            Dim data(1) As Byte
+            data(0) = &H61 ' <--- ASSUMED COMMAND for Low Temp. Change this if needed.
+            data(1) = CByte(lowSetpoint * 2.55F) ' Scale 0-100 to 0-255 byte
+
+            send(data)
+        Catch ex As Exception
+            ' Handle parsing errors if box is empty
+        End Try
+    End Sub
     ' Helper: check if combo box already has this port (avoids errors on missing COM ports)
     Private Function PortsBoxContains(portName As String) As Boolean
         For Each item In PortsComboBox.Items
@@ -602,5 +661,52 @@ Public Class HVAC
 
     End Sub
 
+    Private Sub IncrementHighTempButton_Click(sender As Object, e As EventArgs) Handles IncrementHighTempButton.Click
+        IncrementTemperature(SetTempTextBox, 0.5F)
+    End Sub
+
+    Private Sub IncrementLowTempButton_Click(sender As Object, e As EventArgs) Handles IncrementLowTempButton.Click
+        IncrementTemperature(LowTempTextBox, 0.5F)
+    End Sub
+
+    Private Sub DecrementLowTempButton_Click(sender As Object, e As EventArgs) Handles DecrementLowTempButton.Click
+        IncrementTemperature(LowTempTextBox, -0.5F)
+    End Sub
+    Private Sub DecrementHighTempButton_Click(sender As Object, e As EventArgs) Handles DecrementHighTempButton.Click
+        IncrementTemperature(SetTempTextBox, 0.5F)
+    End Sub
+
+
+
+
+
+
+    Private Sub IncrementTemperature(ByVal targetTextBox As System.Windows.Forms.TextBox, ByVal change As Single)
+        Dim currentTemp As Single = 0.0F
+
+        ' 1. Safely try to parse the current value. If it fails, use the default (0.0F).
+        If Not Single.TryParse(targetTextBox.Text, currentTemp) Then
+            currentTemp = 70.0F ' Use a sensible default if the box is empty or invalid
+        End If
+
+        ' 2. Calculate the new temperature
+        Dim newTemp As Single = currentTemp + change
+
+        ' 3. Optional: Implement min/max limits (e.g., keep temperature between 50°F and 90°F)
+        If newTemp < 50.0F Then newTemp = 50.0F
+        If newTemp > 90.0F Then newTemp = 90.0F
+
+        ' 4. Update the TextBox with the new value, formatted to one decimal place.
+        WriteToTextBox(targetTextBox, newTemp.ToString("F1"))
+
+        ' 5. Trigger the setpoint command to the hardware and save the setting
+        If targetTextBox Is SetTempTextBox Then
+            SendSetpoint()
+        ElseIf targetTextBox Is LowTempTextBox Then
+            SendLowSetpoint()
+        End If
+
+        SaveSettings()
+    End Sub
 
 End Class

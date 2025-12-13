@@ -58,7 +58,13 @@ Partial Class HVAC
         Me.CommunicationToolStripButton = New System.Windows.Forms.ToolStripButton()
         Me.ExitToolStripButton = New System.Windows.Forms.ToolStripButton()
         Me.SaveSettingsToolStripButton = New System.Windows.Forms.ToolStripButton()
-        Me.DetectTimer = New System.Windows.Forms.Timer(Me.components)
+        Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
+        Me.LowTempTextBox = New System.Windows.Forms.TextBox()
+        Me.TargetTempLowLabel = New System.Windows.Forms.Label()
+        Me.IncrementHighTempButton = New System.Windows.Forms.Button()
+        Me.DecrementLowTempButton = New System.Windows.Forms.Button()
+        Me.IncrementLowTempButton = New System.Windows.Forms.Button()
+        Me.DecrementHighTempButton = New System.Windows.Forms.Button()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.ToolStrip1.SuspendLayout()
@@ -98,7 +104,7 @@ Partial Class HVAC
         '
         'SetButton
         '
-        Me.SetButton.Location = New System.Drawing.Point(689, 75)
+        Me.SetButton.Location = New System.Drawing.Point(803, 60)
         Me.SetButton.Name = "SetButton"
         Me.SetButton.Size = New System.Drawing.Size(104, 57)
         Me.SetButton.TabIndex = 3
@@ -116,7 +122,7 @@ Partial Class HVAC
         '
         'CurrentTempTextBox
         '
-        Me.CurrentTempTextBox.Location = New System.Drawing.Point(532, 197)
+        Me.CurrentTempTextBox.Location = New System.Drawing.Point(598, 197)
         Me.CurrentTempTextBox.Name = "CurrentTempTextBox"
         Me.CurrentTempTextBox.Size = New System.Drawing.Size(100, 26)
         Me.CurrentTempTextBox.TabIndex = 5
@@ -131,7 +137,7 @@ Partial Class HVAC
         '
         'SetTempTextBox
         '
-        Me.SetTempTextBox.Location = New System.Drawing.Point(532, 75)
+        Me.SetTempTextBox.Location = New System.Drawing.Point(598, 75)
         Me.SetTempTextBox.Name = "SetTempTextBox"
         Me.SetTempTextBox.Size = New System.Drawing.Size(100, 26)
         Me.SetTempTextBox.TabIndex = 7
@@ -174,16 +180,16 @@ Partial Class HVAC
         'TargetTempLabel
         '
         Me.TargetTempLabel.AutoSize = True
-        Me.TargetTempLabel.Location = New System.Drawing.Point(528, 52)
+        Me.TargetTempLabel.Location = New System.Drawing.Point(594, 52)
         Me.TargetTempLabel.Name = "TargetTempLabel"
-        Me.TargetTempLabel.Size = New System.Drawing.Size(150, 20)
+        Me.TargetTempLabel.Size = New System.Drawing.Size(187, 20)
         Me.TargetTempLabel.TabIndex = 12
-        Me.TargetTempLabel.Text = "Target Temperature"
+        Me.TargetTempLabel.Text = "Target Temperature High"
         '
         'CurrentTempTextBoxLabel
         '
         Me.CurrentTempTextBoxLabel.AutoSize = True
-        Me.CurrentTempTextBoxLabel.Location = New System.Drawing.Point(528, 174)
+        Me.CurrentTempTextBoxLabel.Location = New System.Drawing.Point(594, 174)
         Me.CurrentTempTextBoxLabel.Name = "CurrentTempTextBoxLabel"
         Me.CurrentTempTextBoxLabel.Size = New System.Drawing.Size(153, 20)
         Me.CurrentTempTextBoxLabel.TabIndex = 13
@@ -341,11 +347,69 @@ Partial Class HVAC
         Me.SaveSettingsToolStripButton.Size = New System.Drawing.Size(34, 28)
         Me.SaveSettingsToolStripButton.Text = "ToolStripButton3"
         '
+        'LowTempTextBox
+        '
+        Me.LowTempTextBox.Location = New System.Drawing.Point(598, 145)
+        Me.LowTempTextBox.Name = "LowTempTextBox"
+        Me.LowTempTextBox.Size = New System.Drawing.Size(100, 26)
+        Me.LowTempTextBox.TabIndex = 29
+        '
+        'TargetTempLowLabel
+        '
+        Me.TargetTempLowLabel.AutoSize = True
+        Me.TargetTempLowLabel.Location = New System.Drawing.Point(594, 122)
+        Me.TargetTempLowLabel.Name = "TargetTempLowLabel"
+        Me.TargetTempLowLabel.Size = New System.Drawing.Size(183, 20)
+        Me.TargetTempLowLabel.TabIndex = 30
+        Me.TargetTempLowLabel.Text = "Target Temperature Low"
+        '
+        'IncrementHighTempButton
+        '
+        Me.IncrementHighTempButton.Location = New System.Drawing.Point(550, 75)
+        Me.IncrementHighTempButton.Name = "IncrementHighTempButton"
+        Me.IncrementHighTempButton.Size = New System.Drawing.Size(42, 33)
+        Me.IncrementHighTempButton.TabIndex = 31
+        Me.IncrementHighTempButton.Text = "+"
+        Me.IncrementHighTempButton.UseVisualStyleBackColor = True
+        '
+        'DecrementLowTempButton
+        '
+        Me.DecrementLowTempButton.Location = New System.Drawing.Point(711, 138)
+        Me.DecrementLowTempButton.Name = "DecrementLowTempButton"
+        Me.DecrementLowTempButton.Size = New System.Drawing.Size(43, 33)
+        Me.DecrementLowTempButton.TabIndex = 32
+        Me.DecrementLowTempButton.Text = "-"
+        Me.DecrementLowTempButton.UseVisualStyleBackColor = True
+        '
+        'IncrementLowTempButton
+        '
+        Me.IncrementLowTempButton.Location = New System.Drawing.Point(550, 141)
+        Me.IncrementLowTempButton.Name = "IncrementLowTempButton"
+        Me.IncrementLowTempButton.Size = New System.Drawing.Size(36, 26)
+        Me.IncrementLowTempButton.TabIndex = 33
+        Me.IncrementLowTempButton.Text = "+"
+        Me.IncrementLowTempButton.UseVisualStyleBackColor = True
+        '
+        'DecrementHighTempButton
+        '
+        Me.DecrementHighTempButton.Location = New System.Drawing.Point(711, 75)
+        Me.DecrementHighTempButton.Name = "DecrementHighTempButton"
+        Me.DecrementHighTempButton.Size = New System.Drawing.Size(36, 26)
+        Me.DecrementHighTempButton.TabIndex = 34
+        Me.DecrementHighTempButton.Text = "-"
+        Me.DecrementHighTempButton.UseVisualStyleBackColor = True
+        '
         'HVAC
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1620, 884)
+        Me.Controls.Add(Me.DecrementHighTempButton)
+        Me.Controls.Add(Me.IncrementLowTempButton)
+        Me.Controls.Add(Me.DecrementLowTempButton)
+        Me.Controls.Add(Me.IncrementHighTempButton)
+        Me.Controls.Add(Me.TargetTempLowLabel)
+        Me.Controls.Add(Me.LowTempTextBox)
         Me.Controls.Add(Me.ToolStrip1)
         Me.Controls.Add(Me.HadwareTempTextBoxLabel)
         Me.Controls.Add(Me.HardwareTextBox)
@@ -420,5 +484,11 @@ Partial Class HVAC
     Friend WithEvents CommunicationToolStripButton As ToolStripButton
     Friend WithEvents ExitToolStripButton As ToolStripButton
     Friend WithEvents SaveSettingsToolStripButton As ToolStripButton
-    Friend WithEvents DetectTimer As Timer
+    Friend WithEvents Timer1 As Timer
+    Friend WithEvents LowTempTextBox As TextBox
+    Friend WithEvents TargetTempLowLabel As Label
+    Friend WithEvents IncrementHighTempButton As Button
+    Friend WithEvents DecrementLowTempButton As Button
+    Friend WithEvents IncrementLowTempButton As Button
+    Friend WithEvents DecrementHighTempButton As Button
 End Class
