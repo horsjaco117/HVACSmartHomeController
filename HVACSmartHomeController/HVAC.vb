@@ -23,11 +23,13 @@ Public Class HVAC
     Private heatLatched As Boolean = False
     Private coolLatched As Boolean = False
     Private fanLatched As Boolean = False
-
+    Private interlockLatched As Boolean = False
     ' For edge detection (previous state tracking)
     Private prevHeatBit As Boolean = False
     Private prevCoolBit As Boolean = False
-    Private prevFanBit As Boolean = False
+    Private prevFanBit As Boolean = false
+    Private prevInterlockBit As Boolean = False
+
 
     Private Const HYSTERESIS As Single = 0.5F  ' Degrees F; adjust as needed (common values: 0.5–1.0)
 
@@ -280,17 +282,25 @@ Public Class HVAC
                 WriteToTextBox(DigitalInputsTextBox, displayBits)
 
                 ' === EDGE DETECTION AND SOFTWARE LATCHING ===
-                If safetyInterlock Then
+                If safetyInterlock AndAlso Not prevInterlockBit Then
+                    interlockLatched = True  ' Latch the interlock on rising edge
                     heatLatched = False
                     coolLatched = False
                     fanLatched = False
-                Else
+                End If
+
+                ' Reset interlock latch on a specific condition (example: falling edge of fan button)
+                If Not fanButtonNow AndAlso prevFanBit AndAlso interlockLatched Then
+                    interlockLatched = False  ' Reset latch when fan button is released
+                End If
+
+                If Not interlockLatched Then  ' Only allow other mode toggles if not latched
                     ' Heating toggle (clears others if turning on)
                     If heatButtonNow AndAlso Not prevHeatBit Then
                         heatLatched = Not heatLatched
                         If heatLatched Then
                             coolLatched = False
-                            fanLatched = False
+                            ' fanLatched = False
                         End If
                     End If
 
@@ -299,7 +309,7 @@ Public Class HVAC
                         coolLatched = Not coolLatched
                         If coolLatched Then
                             heatLatched = False
-                            fanLatched = False
+                            ' fanLatched = False
                         End If
                     End If
 
@@ -307,16 +317,22 @@ Public Class HVAC
                     If fanButtonNow AndAlso Not prevFanBit Then
                         fanLatched = Not fanLatched
                         If fanLatched Then
-                            heatLatched = False
-                            coolLatched = False
+                            ' heatLatched = False
+                            ' coolLatched = False
                         End If
                     End If
+                Else
+                    ' While latched, force other latches off
+                    heatLatched = False
+                    coolLatched = False
+                    fanLatched = False
                 End If
 
                 ' Update previous states
                 prevHeatBit = heatButtonNow
                 prevCoolBit = coolButtonNow
                 prevFanBit = fanButtonNow
+                prevInterlockBit = safetyInterlock
 
                 ' === TEMPERATURE CALCULATION (Bytes 1-4) ===
                 Dim adcLow0 As Integer = buffer(2)
@@ -333,11 +349,11 @@ Public Class HVAC
                 WriteToTextBox(HardwareTextBox, hardwareTemp.ToString("F1") & " °F")
 
                 ' === UPDATE OPERATION MODE DISPLAY ===
+                ' === UPDATE OPERATION MODE DISPLAY ===
                 Dim mode As String = "OFF"
                 Dim bg As Color = SystemColors.Control
                 Dim fg As Color = SystemColors.ControlText
-
-                If safetyInterlock Then
+                If interlockLatched Then  ' Use latched state for persistence
                     mode = "SAFETY LOCKOUT"
                     bg = Color.DarkRed
                     fg = Color.White
@@ -356,34 +372,12 @@ Public Class HVAC
                         '    fg = Color.White
                     End If
                 End If
-
                 Me.Invoke(Sub()
                               OperationTextBox.Text = mode
                               OperationTextBox.BackColor = bg
                               OperationTextBox.ForeColor = fg
                               OperationTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
                           End Sub)
-
-                Dim highLimit As Single
-                Dim lowLimit As Single
-
-                ' Parse the text boxes safely
-                If Single.TryParse(SetTempTextBox.Text, highLimit) AndAlso
-       Single.TryParse(LowTempTextBox.Text, lowLimit) Then
-
-                    Me.Invoke(Sub()
-                                  If currentTemp > highLimit Then
-                                      ' Visual alarm for High Temp
-                                      CurrentTempTextBox.ForeColor = Color.Red
-                                  ElseIf currentTemp < lowLimit Then
-                                      ' Visual alarm for Low Temp
-                                      CurrentTempTextBox.ForeColor = Color.Blue
-                                  Else
-                                      ' Normal Range
-                                      CurrentTempTextBox.ForeColor = Color.Black
-                                  End If
-                              End Sub)
-                End If
 
                 ' === UPDATE FAN TEXTBOX (Manual latch only) ===
                 Me.Invoke(Sub()
