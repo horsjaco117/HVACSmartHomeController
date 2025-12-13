@@ -19,6 +19,20 @@ Imports System.Threading.Thread
 '
 
 Public Class HVAC
+    ' Fan and output control
+    Private fanOutput As Boolean = False        ' Actual desired fan state (sent to hardware later)
+    Private heatOutput As Boolean = False       ' Actual desired heating state
+    Private coolOutput As Boolean = False       ' Actual desired cooling state
+
+    ' Filter monitoring (bit 4)
+    Private prevFilterDirtyBit As Boolean = False
+    Private filterDirtyStartTime As DateTime = DateTime.MinValue
+    Private fanRuntimeStart As DateTime = DateTime.MinValue
+    Private cumulativeFanSeconds As Long = 0    ' For periodic check
+
+    Private WithEvents FilterTimer As New Timer()   ' For 2-minute periodic check
+    Private Const FILTER_HOLD_SECONDS As Integer = 5
+    Private Const FILTER_CHECK_MINUTES As Integer = 2
     'Important definitions
     Private heatLatched As Boolean = False
     Private coolLatched As Boolean = False
@@ -29,6 +43,7 @@ Public Class HVAC
     Private prevCoolBit As Boolean = False
     Private prevFanBit As Boolean = False
     Private prevInterlockBit As Boolean = False
+    Private latestDigitalByte As Byte = 0  ' Stores the most recently received and processed digital input byte
 
     ' --- Add fields to hold the most recent temperature readings ---
     Private currentemp As Single = 0.0F
@@ -301,12 +316,13 @@ Public Class HVAC
                 ' === DIGITAL INPUTS (Byte0) – INVERTED FOR PULLED-UP INPUTS ===
                 Dim digitalByte As Byte = buffer(0)
                 digitalByte = Not digitalByte ' Pressed =1
+                latestDigitalByte = digitalByte
 
                 Dim safetyInterlock As Boolean = (digitalByte And &H1) <> 0 ' Bit0
                 Dim heatButtonNow As Boolean = (digitalByte And &H2) <> 0 ' Bit1
                 Dim fanButtonNow As Boolean = (digitalByte And &H4) <> 0 ' Bit2
                 Dim coolButtonNow As Boolean = (digitalByte And &H8) <> 0 ' Bit3
-
+                Dim filterDirtyNow As Boolean = (digitalByte And &H10) <> 0 ' Bit 4 (adjust inversion if needed)
                 ' Display binary inputs
                 Dim binary As String = Convert.ToString(digitalByte, 2).PadLeft(8, "0"c)
                 Dim displayBits As String = New String(binary.Reverse().ToArray())
@@ -425,23 +441,45 @@ Public Class HVAC
                                   End If
                               End If
                           End Sub)
-                ' === UPDATE FAN TEXTBOX (Manual latch only) ===
+                ' === OUTPUT CONTROL LOGIC ===
+                If interlockLatched Then
+                    fanOutput = False
+                    heatOutput = False
+                    coolOutput = False
+                Else
+                    ' Fan control
+                    If fanLatched Then
+                        fanOutput = True                       ' Manual override: fan nonstop
+                    Else
+                        fanOutput = heatLatched Or coolLatched ' Auto: fan when heat or cool active
+                    End If
+
+                    ' Heating/Cooling outputs (with heating sequence already handled via latching)
+                    heatOutput = heatLatched
+                    coolOutput = coolLatched
+                End If
+
+                ' Update Fan TextBox to reflect actual output state and reason
                 Me.Invoke(Sub()
-                              If safetyInterlock Then
+                              If interlockLatched Then
                                   FanTextBox.Text = "FAN: OFF (SAFETY)"
                                   FanTextBox.BackColor = Color.DarkRed
-                                  FanTextBox.ForeColor = Color.White
-                              ElseIf fanLatched Then
-                                  FanTextBox.Text = "FAN: ON (MANUAL)"
-                                  FanTextBox.BackColor = Color.LimeGreen
-                                  FanTextBox.ForeColor = Color.White
+                              ElseIf fanOutput Then
+                                  If fanLatched Then
+                                      FanTextBox.Text = "FAN: ON (MANUAL OVERRIDE)"
+                                      FanTextBox.BackColor = Color.LimeGreen
+                                  Else
+                                      FanTextBox.Text = "FAN: ON (AUTO - " & OperationTextBox.Text & ")"
+                                      FanTextBox.BackColor = Color.LightGreen
+                                  End If
                               Else
                                   FanTextBox.Text = "FAN: OFF"
                                   FanTextBox.BackColor = SystemColors.Control
-                                  FanTextBox.ForeColor = SystemColors.ControlText
                               End If
+                              FanTextBox.ForeColor = Color.White
                               FanTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
                           End Sub)
+
 
             Catch ex As Exception
                 ' Communication continues despite errors
@@ -565,7 +603,8 @@ Public Class HVAC
         ReadTimer.Enabled = True ' Start constant reading
         Me.Font = New Font("Segoe UI", 11, FontStyle.Bold)
         Me.BackColor = Color.FromArgb(244, 121, 32)
-
+        FilterTimer.Interval = 1000  ' Check every second for hold timing and runtime
+        FilterTimer.Enabled = True
         LoadSettings()
         IncrementTemperatureHigh(SetTempTextBox, 0)
         IncrementTemperatureLow(LowTempTextBox, 0)
@@ -776,6 +815,60 @@ Public Class HVAC
         End If
 
         SaveSettings()
+    End Sub
+
+    Private Sub FilterTimer_Tick(sender As Object, e As EventArgs) Handles FilterTimer.Tick
+        If interlockLatched Then Exit Sub    ' No checks during lockout
+
+        Dim filterDirtyNow As Boolean = (latestDigitalByte And &H10) <> 0 ' Bit 4 (non-inverted after Not operation)
+        ' Track continuous hold time for 5-second trigger
+        If filterDirtyNow AndAlso Not prevFilterDirtyBit Then
+            filterDirtyStartTime = DateTime.Now
+        ElseIf Not filterDirtyNow Then
+            filterDirtyStartTime = DateTime.MinValue
+        End If
+
+        If filterDirtyNow AndAlso filterDirtyStartTime <> DateTime.MinValue Then
+            If (DateTime.Now - filterDirtyStartTime).TotalSeconds >= FILTER_HOLD_SECONDS Then
+                TriggerFilterFault()
+            End If
+        End If
+
+        prevFilterDirtyBit = filterDirtyNow
+
+        ' Track cumulative fan runtime for 2-minute check
+        If fanOutput Then
+            If fanRuntimeStart = DateTime.MinValue Then fanRuntimeStart = DateTime.Now
+        Else
+            If fanRuntimeStart <> DateTime.MinValue Then
+                cumulativeFanSeconds += CLng((DateTime.Now - fanRuntimeStart).TotalSeconds)
+                fanRuntimeStart = DateTime.MinValue
+            End If
+        End If
+
+        If fanOutput AndAlso cumulativeFanSeconds >= (FILTER_CHECK_MINUTES * 60) Then
+            If filterDirtyNow Then
+                TriggerFilterFault()
+            End If
+            cumulativeFanSeconds = 0  ' Reset after check
+        End If
+    End Sub
+
+    Private Sub TriggerFilterFault()
+        heatLatched = False
+        coolLatched = False
+        heatOutput = False
+        coolOutput = False
+        ' Update UI mode if needed
+        MessageBox.Show("Filter Error Detected: Filter is dirty or input held too long." & vbCrLf &
+                        "Heating and cooling have been disabled. Replace/clean filter and reset system.",
+                        "Filter Fault", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        ' Optional: Update a dedicated label or change OperationTextBox
+        Me.Invoke(Sub()
+                      OperationTextBox.Text = "FILTER FAULT"
+                      OperationTextBox.BackColor = Color.Orange
+                      OperationTextBox.ForeColor = Color.White
+                  End Sub)
     End Sub
 
 End Class

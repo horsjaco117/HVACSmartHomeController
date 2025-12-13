@@ -317,7 +317,7 @@ Partial Class HVAC
         Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CommunicationToolStripButton, Me.ExitToolStripButton, Me.SaveSettingsToolStripButton})
         Me.ToolStrip1.Location = New System.Drawing.Point(0, 0)
         Me.ToolStrip1.Name = "ToolStrip1"
-        Me.ToolStrip1.Size = New System.Drawing.Size(1620, 33)
+        Me.ToolStrip1.Size = New System.Drawing.Size(1620, 38)
         Me.ToolStrip1.TabIndex = 28
         Me.ToolStrip1.Text = "ToolStrip1"
         '
@@ -327,7 +327,7 @@ Partial Class HVAC
         Me.CommunicationToolStripButton.Image = CType(resources.GetObject("CommunicationToolStripButton.Image"), System.Drawing.Image)
         Me.CommunicationToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.CommunicationToolStripButton.Name = "CommunicationToolStripButton"
-        Me.CommunicationToolStripButton.Size = New System.Drawing.Size(34, 28)
+        Me.CommunicationToolStripButton.Size = New System.Drawing.Size(34, 33)
         Me.CommunicationToolStripButton.Text = "COM Setup"
         '
         'ExitToolStripButton
@@ -336,7 +336,7 @@ Partial Class HVAC
         Me.ExitToolStripButton.Image = CType(resources.GetObject("ExitToolStripButton.Image"), System.Drawing.Image)
         Me.ExitToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.ExitToolStripButton.Name = "ExitToolStripButton"
-        Me.ExitToolStripButton.Size = New System.Drawing.Size(34, 28)
+        Me.ExitToolStripButton.Size = New System.Drawing.Size(34, 33)
         Me.ExitToolStripButton.Text = "Exit"
         '
         'SaveSettingsToolStripButton
@@ -345,7 +345,7 @@ Partial Class HVAC
         Me.SaveSettingsToolStripButton.Image = CType(resources.GetObject("SaveSettingsToolStripButton.Image"), System.Drawing.Image)
         Me.SaveSettingsToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.SaveSettingsToolStripButton.Name = "SaveSettingsToolStripButton"
-        Me.SaveSettingsToolStripButton.Size = New System.Drawing.Size(34, 28)
+        Me.SaveSettingsToolStripButton.Size = New System.Drawing.Size(34, 33)
         Me.SaveSettingsToolStripButton.Text = "ToolStripButton3"
         '
         'LowTempTextBox
