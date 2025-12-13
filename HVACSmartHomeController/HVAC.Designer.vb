@@ -50,14 +50,9 @@ Partial Class HVAC
         Me.Label1 = New System.Windows.Forms.Label()
         Me.FanTextBox = New System.Windows.Forms.TextBox()
         Me.FanLabel = New System.Windows.Forms.Label()
-        Me.PictureBox1 = New System.Windows.Forms.PictureBox()
-        Me.PictureBox2 = New System.Windows.Forms.PictureBox()
         Me.HardwareTextBox = New System.Windows.Forms.TextBox()
         Me.HadwareTempTextBoxLabel = New System.Windows.Forms.Label()
         Me.ToolStrip1 = New System.Windows.Forms.ToolStrip()
-        Me.CommunicationToolStripButton = New System.Windows.Forms.ToolStripButton()
-        Me.ExitToolStripButton = New System.Windows.Forms.ToolStripButton()
-        Me.SaveSettingsToolStripButton = New System.Windows.Forms.ToolStripButton()
         Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
         Me.LowTempTextBox = New System.Windows.Forms.TextBox()
         Me.TargetTempLowLabel = New System.Windows.Forms.Label()
@@ -66,9 +61,14 @@ Partial Class HVAC
         Me.IncrementLowTempButton = New System.Windows.Forms.Button()
         Me.DecrementHighTempButton = New System.Windows.Forms.Button()
         Me.SafetyTimer = New System.Windows.Forms.Timer(Me.components)
+        Me.PictureBox1 = New System.Windows.Forms.PictureBox()
+        Me.CommunicationToolStripButton = New System.Windows.Forms.ToolStripButton()
+        Me.ExitToolStripButton = New System.Windows.Forms.ToolStripButton()
+        Me.SaveSettingsToolStripButton = New System.Windows.Forms.ToolStripButton()
+        Me.PictureBox2 = New System.Windows.Forms.PictureBox()
+        Me.ToolStrip1.SuspendLayout()
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.ToolStrip1.SuspendLayout()
         Me.SuspendLayout()
         '
         'SerialPort1
@@ -278,23 +278,6 @@ Partial Class HVAC
         Me.FanLabel.TabIndex = 23
         Me.FanLabel.Text = "Fan Status"
         '
-        'PictureBox1
-        '
-        Me.PictureBox1.Location = New System.Drawing.Point(0, 0)
-        Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(100, 50)
-        Me.PictureBox1.TabIndex = 24
-        Me.PictureBox1.TabStop = False
-        '
-        'PictureBox2
-        '
-        Me.PictureBox2.Image = Global.HVACSmartHomeController.My.Resources.Resources.ISU_logo
-        Me.PictureBox2.Location = New System.Drawing.Point(738, 628)
-        Me.PictureBox2.Name = "PictureBox2"
-        Me.PictureBox2.Size = New System.Drawing.Size(275, 218)
-        Me.PictureBox2.TabIndex = 25
-        Me.PictureBox2.TabStop = False
-        '
         'HardwareTextBox
         '
         Me.HardwareTextBox.Location = New System.Drawing.Point(917, 148)
@@ -317,36 +300,9 @@ Partial Class HVAC
         Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CommunicationToolStripButton, Me.ExitToolStripButton, Me.SaveSettingsToolStripButton})
         Me.ToolStrip1.Location = New System.Drawing.Point(0, 0)
         Me.ToolStrip1.Name = "ToolStrip1"
-        Me.ToolStrip1.Size = New System.Drawing.Size(1620, 38)
+        Me.ToolStrip1.Size = New System.Drawing.Size(1620, 33)
         Me.ToolStrip1.TabIndex = 28
         Me.ToolStrip1.Text = "ToolStrip1"
-        '
-        'CommunicationToolStripButton
-        '
-        Me.CommunicationToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
-        Me.CommunicationToolStripButton.Image = CType(resources.GetObject("CommunicationToolStripButton.Image"), System.Drawing.Image)
-        Me.CommunicationToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.CommunicationToolStripButton.Name = "CommunicationToolStripButton"
-        Me.CommunicationToolStripButton.Size = New System.Drawing.Size(34, 33)
-        Me.CommunicationToolStripButton.Text = "COM Setup"
-        '
-        'ExitToolStripButton
-        '
-        Me.ExitToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
-        Me.ExitToolStripButton.Image = CType(resources.GetObject("ExitToolStripButton.Image"), System.Drawing.Image)
-        Me.ExitToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.ExitToolStripButton.Name = "ExitToolStripButton"
-        Me.ExitToolStripButton.Size = New System.Drawing.Size(34, 33)
-        Me.ExitToolStripButton.Text = "Exit"
-        '
-        'SaveSettingsToolStripButton
-        '
-        Me.SaveSettingsToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
-        Me.SaveSettingsToolStripButton.Image = CType(resources.GetObject("SaveSettingsToolStripButton.Image"), System.Drawing.Image)
-        Me.SaveSettingsToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.SaveSettingsToolStripButton.Name = "SaveSettingsToolStripButton"
-        Me.SaveSettingsToolStripButton.Size = New System.Drawing.Size(34, 33)
-        Me.SaveSettingsToolStripButton.Text = "ToolStripButton3"
         '
         'LowTempTextBox
         '
@@ -404,11 +360,57 @@ Partial Class HVAC
         '
         Me.SafetyTimer.Interval = 3000
         '
+        'PictureBox1
+        '
+        Me.PictureBox1.Image = Global.HVACSmartHomeController.My.Resources.Resources.fire
+        Me.PictureBox1.Location = New System.Drawing.Point(1070, 52)
+        Me.PictureBox1.Name = "PictureBox1"
+        Me.PictureBox1.Size = New System.Drawing.Size(538, 317)
+        Me.PictureBox1.TabIndex = 35
+        Me.PictureBox1.TabStop = False
+        '
+        'CommunicationToolStripButton
+        '
+        Me.CommunicationToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.CommunicationToolStripButton.Image = CType(resources.GetObject("CommunicationToolStripButton.Image"), System.Drawing.Image)
+        Me.CommunicationToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.CommunicationToolStripButton.Name = "CommunicationToolStripButton"
+        Me.CommunicationToolStripButton.Size = New System.Drawing.Size(34, 28)
+        Me.CommunicationToolStripButton.Text = "COM Setup"
+        '
+        'ExitToolStripButton
+        '
+        Me.ExitToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.ExitToolStripButton.Image = CType(resources.GetObject("ExitToolStripButton.Image"), System.Drawing.Image)
+        Me.ExitToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.ExitToolStripButton.Name = "ExitToolStripButton"
+        Me.ExitToolStripButton.Size = New System.Drawing.Size(34, 28)
+        Me.ExitToolStripButton.Text = "Exit"
+        '
+        'SaveSettingsToolStripButton
+        '
+        Me.SaveSettingsToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
+        Me.SaveSettingsToolStripButton.Image = CType(resources.GetObject("SaveSettingsToolStripButton.Image"), System.Drawing.Image)
+        Me.SaveSettingsToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.SaveSettingsToolStripButton.Name = "SaveSettingsToolStripButton"
+        Me.SaveSettingsToolStripButton.Size = New System.Drawing.Size(34, 28)
+        Me.SaveSettingsToolStripButton.Text = "ToolStripButton3"
+        '
+        'PictureBox2
+        '
+        Me.PictureBox2.Image = Global.HVACSmartHomeController.My.Resources.Resources.ISU_logo
+        Me.PictureBox2.Location = New System.Drawing.Point(738, 628)
+        Me.PictureBox2.Name = "PictureBox2"
+        Me.PictureBox2.Size = New System.Drawing.Size(275, 218)
+        Me.PictureBox2.TabIndex = 25
+        Me.PictureBox2.TabStop = False
+        '
         'HVAC
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1620, 884)
+        Me.Controls.Add(Me.PictureBox1)
         Me.Controls.Add(Me.DecrementHighTempButton)
         Me.Controls.Add(Me.IncrementLowTempButton)
         Me.Controls.Add(Me.DecrementLowTempButton)
@@ -419,7 +421,6 @@ Partial Class HVAC
         Me.Controls.Add(Me.HadwareTempTextBoxLabel)
         Me.Controls.Add(Me.HardwareTextBox)
         Me.Controls.Add(Me.PictureBox2)
-        Me.Controls.Add(Me.PictureBox1)
         Me.Controls.Add(Me.FanLabel)
         Me.Controls.Add(Me.FanTextBox)
         Me.Controls.Add(Me.Label1)
@@ -446,10 +447,10 @@ Partial Class HVAC
         Me.Controls.Add(Me.SerialPortsComboBox)
         Me.Name = "HVAC"
         Me.Text = "HVAC"
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ToolStrip1.ResumeLayout(False)
         Me.ToolStrip1.PerformLayout()
+        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -481,7 +482,6 @@ Partial Class HVAC
     Friend WithEvents Label1 As Label
     Friend WithEvents FanTextBox As TextBox
     Friend WithEvents FanLabel As Label
-    Friend WithEvents PictureBox1 As PictureBox
     Friend WithEvents PictureBox2 As PictureBox
     Friend WithEvents HardwareTextBox As TextBox
     Friend WithEvents HadwareTempTextBoxLabel As Label
@@ -497,4 +497,5 @@ Partial Class HVAC
     Friend WithEvents IncrementLowTempButton As Button
     Friend WithEvents DecrementHighTempButton As Button
     Friend WithEvents SafetyTimer As Timer
+    Friend WithEvents PictureBox1 As PictureBox
 End Class
