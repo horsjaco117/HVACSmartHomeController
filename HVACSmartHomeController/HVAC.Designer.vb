@@ -58,6 +58,7 @@ Partial Class HVAC
         Me.CommunicationToolStripButton = New System.Windows.Forms.ToolStripButton()
         Me.ExitToolStripButton = New System.Windows.Forms.ToolStripButton()
         Me.SaveSettingsToolStripButton = New System.Windows.Forms.ToolStripButton()
+        Me.DetectTimer = New System.Windows.Forms.Timer(Me.components)
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.ToolStrip1.SuspendLayout()
@@ -419,4 +420,5 @@ Partial Class HVAC
     Friend WithEvents CommunicationToolStripButton As ToolStripButton
     Friend WithEvents ExitToolStripButton As ToolStripButton
     Friend WithEvents SaveSettingsToolStripButton As ToolStripButton
+    Friend WithEvents DetectTimer As Timer
 End Class

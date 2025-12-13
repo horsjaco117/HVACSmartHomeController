@@ -6,12 +6,13 @@
 Option Strict On
 Option Explicit On
 
-Imports System.Media
-Imports System.Threading.Thread
-Imports System.Runtime.CompilerServices
 ' Serial communications imports
 Imports System.IO.Ports
+Imports System.Media
 Imports System.Net.Configuration
+Imports System.Runtime.CompilerServices
+Imports System.Text.RegularExpressions
+Imports System.Threading.Thread
 
 'TODO
 'ADD LATCHING TO THE COOLING AND HEATING 
@@ -34,6 +35,23 @@ Public Class HVAC
 
     Private Const SETTINGS_FILE As String = "HVAC Settings.txt"
 
+    'Compliant with quiet board
+    Private WithEvents AutoDetectTimer As New Timer()
+    Private previouslyAvailablePorts As New List(Of String)
+    Private hardwareVerified As Boolean = False
+
+    'Handshake verification
+    Private ReadOnly ExpectedHandshakeResponse As Byte() = {
+    &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0,
+    &H0, &H0, &H0, &H0, &H0, &H0, &HFF, &H0, &H0, &H0,
+    &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0,
+    &H0, &HD0, &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0,
+    &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0, &H0,
+    &H0, &H0, &H0, &H0, &H0, &H0, &H51, &H79, &H40, &H32,
+    &H2E, &H30, &H68, &HC0, &HFD, &H40, &HCC, &HC0, &HBF, &H0,
+    &HFF, &H68, &HC0, &HFD, &H40, &HEE, &HC0, &HE5, &H80
+}
+
     Private Function GetSettingsPath() As String
         Return System.IO.Path.Combine(Application.StartupPath, SETTINGS_FILE)
     End Function
@@ -41,10 +59,12 @@ Public Class HVAC
 
     ' Serial Communications----------------------------------------------------------
     Sub SetDefaults() ' Set's default serial pieces and shows COM ports
-        SerialPort1.Close() ' Closes the COM ports but adds settings
-        ConnectionStatusLabel.Text = "No connection" ' No connect until port chosen
-        GetPorts() ' Shows available ports
+        SerialPort1.Close()
+        hardwareVerified = False  ' Add this line
+        ConnectionStatusLabel.Text = "No connection"
+        GetPorts()
     End Sub
+
 
     Sub GetPorts()
         Dim ports() = SerialPort.GetPortNames() ' Available ports (note: fixed to SerialPort.GetPortNames)
@@ -63,25 +83,28 @@ Public Class HVAC
     End Sub
 
     Sub AutoConnect()
-        GetPorts() ' Get available ports
+        GetPorts()
         For Each port As String In PortsComboBox.Items
             PortsComboBox.SelectedItem = port
             Try
                 connect()
-                write() ' Send handshake
-                Sleep(200) ' Brief delay to allow response
-                If SerialPort1.IsOpen AndAlso IsQuietBoard() Then
-                    ConnectionStatusLabel.Text = $"Connected automatically on {SerialPort1.PortName}"
-                    Exit For ' Successful connection, stop trying other ports
-                Else
-                    SerialPort1.Close()
+                If SerialPort1.IsOpen Then
+                    write() ' Send handshake
+                    Sleep(200)
+                    If IsQuietBoard() Then
+                        ConnectionStatusLabel.Text = $"Connected automatically on {SerialPort1.PortName}"
+                        Exit For
+                    Else
+                        SerialPort1.Close()
+                    End If
                 End If
             Catch ex As Exception
                 ' Skip invalid port
             End Try
         Next
+
         If Not SerialPort1.IsOpen Then
-            ConnectionStatusLabel.Text = "Auto-connect failed. Try manual connect."
+            ConnectionStatusLabel.Text = "Auto-connect failed or wrong device detected. Try manual connect."
         End If
     End Sub
 
@@ -119,9 +142,17 @@ Public Class HVAC
     End Sub
 
     Private Sub COMButton_Click(sender As Object, e As EventArgs) Handles COMButton.Click
-        ' Establishes the com between the device (manual connect fallback)
         connect()
-        write()
+        If SerialPort1.IsOpen Then
+            write()  ' Send &HF0 handshake
+            Sleep(200)
+            If IsQuietBoard() Then
+                ConnectionStatusLabel.Text = $"Connected manually on {SerialPort1.PortName}"
+            Else
+                SerialPort1.Close()
+                ConnectionStatusLabel.Text = "Wrong device detected or no response. Disconnected."
+            End If
+        End If
     End Sub
 
 
@@ -160,160 +191,259 @@ Public Class HVAC
 
         SerialPort1.Write(cmd, 0, 1)
         CurrentTimeTextBox.Text = DateTime.Now.ToString("hh:mm:ss tt")
+        ' IsQuietBoard()
+    End Sub
+
+    Private Sub DetectTimer_Tick(sender As Object, e As EventArgs) Handles DetectTimer.Tick
+        If SerialPort1.IsOpen Then
+            ' Already connected to verified hardware → skip scanning
+            Return
+        End If
+
+        Dim currentPorts As String() = SerialPort.GetPortNames()
+
+        ' Detect new ports (hot-plug)
+        Dim newPorts = currentPorts.Except(previouslyAvailablePorts).ToList()
+
+        If newPorts.Count > 0 Then
+            ' New device(s) detected → attempt verification on each
+            For Each port In newPorts
+                Try
+                    PortsComboBox.SelectedItem = port
+                    connect()
+                    If SerialPort1.IsOpen Then
+                        write()  ' Send &HF0
+                        Sleep(200)
+                        If IsQuietBoard() Then
+                            Me.Invoke(Sub()
+                                          ConnectionStatusLabel.Text = $"Auto-connected to compliant device on {SerialPort1.PortName}"
+                                      End Sub)
+                            previouslyAvailablePorts = currentPorts.ToList()
+                            Return  ' Success: stop scanning
+                        Else
+                            SerialPort1.Close()
+                        End If
+                    End If
+                Catch ex As Exception
+                    ' Skip invalid/new port
+                End Try
+            Next
+        End If
+
+        ' Update tracked ports
+        previouslyAvailablePorts = currentPorts.ToList()
+    End Sub
+
+    Private Sub SerialPort1_ErrorReceived(sender As Object, e As SerialErrorReceivedEventArgs) Handles SerialPort1.ErrorReceived
+        Me.Invoke(Sub()
+                      If SerialPort1.IsOpen Then
+                          Try
+                              SerialPort1.Close()
+                          Catch
+                              ' Ignore errors during close
+                          End Try
+                      End If
+                      ConnectionStatusLabel.Text = "Connection lost (error detected)."
+                      SetDefaults()  ' Reset UI and port list
+                  End Sub)
     End Sub
 
     Private Sub SerialPort1_DataReceived(sender As Object, e As SerialDataReceivedEventArgs) Handles SerialPort1.DataReceived
         Try
-            Dim bytesToRead As Integer = SerialPort1.BytesToRead
-            If bytesToRead < 4 Then Exit Sub
+            Try
+                Dim bytesToRead As Integer = SerialPort1.BytesToRead
+                If bytesToRead < 4 Then Exit Sub
 
-            Dim buffer(bytesToRead - 1) As Byte
-            SerialPort1.Read(buffer, 0, bytesToRead)
+                Dim buffer(bytesToRead - 1) As Byte
+                SerialPort1.Read(buffer, 0, bytesToRead)
 
-            ' Show raw packet
-            Dim hex As String = BitConverter.ToString(buffer).Replace("-", " ")
-            Me.Invoke(Sub()
-                          SerialTextBox.AppendText($"{DateTime.Now:HH:mm:ss.fff} → {hex}{vbCrLf}")
-                          SerialTextBox.SelectionStart = SerialTextBox.Text.Length
-                          SerialTextBox.ScrollToCaret()
-                      End Sub)
+                ' Show raw packet
+                Dim hex As String = BitConverter.ToString(buffer).Replace("-", " ")
+                Me.Invoke(Sub()
+                              SerialTextBox.AppendText($"{DateTime.Now:HH:mm:ss.fff} → {hex}{vbCrLf}")
+                              SerialTextBox.SelectionStart = SerialTextBox.Text.Length
+                              SerialTextBox.ScrollToCaret()
+                          End Sub)
 
-            ' === DIGITAL INPUTS (Byte 0) – INVERTED FOR PULLED-UP INPUTS ===
-            Dim digitalByte As Byte = buffer(0)
-            digitalByte = Not digitalByte  ' Pressed = 1
+                ' === DIGITAL INPUTS (Byte 0) – INVERTED FOR PULLED-UP INPUTS ===
+                Dim digitalByte As Byte = buffer(0)
+                digitalByte = Not digitalByte  ' Pressed = 1
 
-            Dim safetyInterlock As Boolean = (digitalByte And &H1) <> 0  ' Bit 0
-            Dim heatButtonNow As Boolean = (digitalByte And &H2) <> 0  ' Bit 1
-            Dim fanButtonNow As Boolean = (digitalByte And &H4) <> 0  ' Bit 2
-            Dim coolButtonNow As Boolean = (digitalByte And &H8) <> 0  ' Bit 3
+                Dim safetyInterlock As Boolean = (digitalByte And &H1) <> 0  ' Bit 0
+                Dim heatButtonNow As Boolean = (digitalByte And &H2) <> 0  ' Bit 1
+                Dim fanButtonNow As Boolean = (digitalByte And &H4) <> 0  ' Bit 2
+                Dim coolButtonNow As Boolean = (digitalByte And &H8) <> 0  ' Bit 3
 
-            ' Display binary inputs
-            Dim binary As String = Convert.ToString(digitalByte, 2).PadLeft(8, "0"c)
-            Dim displayBits As String = New String(binary.Reverse().ToArray())
-            WriteToTextBox(DigitalInputsTextBox, displayBits)
+                ' Display binary inputs
+                Dim binary As String = Convert.ToString(digitalByte, 2).PadLeft(8, "0"c)
+                Dim displayBits As String = New String(binary.Reverse().ToArray())
+                WriteToTextBox(DigitalInputsTextBox, displayBits)
 
-            ' === EDGE DETECTION AND SOFTWARE LATCHING ===
-            If safetyInterlock Then
-                heatLatched = False
-                coolLatched = False
-                fanLatched = False
-            Else
-                ' Heating toggle (clears others if turning on)
-                If heatButtonNow AndAlso Not prevHeatBit Then
-                    heatLatched = Not heatLatched
-                    If heatLatched Then
-                        coolLatched = False
-                        fanLatched = False
+                ' === EDGE DETECTION AND SOFTWARE LATCHING ===
+                If safetyInterlock Then
+                    heatLatched = False
+                    coolLatched = False
+                    fanLatched = False
+                Else
+                    ' Heating toggle (clears others if turning on)
+                    If heatButtonNow AndAlso Not prevHeatBit Then
+                        heatLatched = Not heatLatched
+                        If heatLatched Then
+                            coolLatched = False
+                            fanLatched = False
+                        End If
+                    End If
+
+                    ' Cooling toggle (clears others if turning on)
+                    If coolButtonNow AndAlso Not prevCoolBit Then
+                        coolLatched = Not coolLatched
+                        If coolLatched Then
+                            heatLatched = False
+                            fanLatched = False
+                        End If
+                    End If
+
+                    ' Fan toggle (clears others if turning on)
+                    If fanButtonNow AndAlso Not prevFanBit Then
+                        fanLatched = Not fanLatched
+                        If fanLatched Then
+                            heatLatched = False
+                            coolLatched = False
+                        End If
                     End If
                 End If
 
-                ' Cooling toggle (clears others if turning on)
-                If coolButtonNow AndAlso Not prevCoolBit Then
-                    coolLatched = Not coolLatched
+                ' Update previous states
+                prevHeatBit = heatButtonNow
+                prevCoolBit = coolButtonNow
+                prevFanBit = fanButtonNow
+
+                ' === TEMPERATURE CALCULATION (Bytes 1-4) ===
+                Dim adcLow0 As Integer = buffer(2)
+                Dim adcHigh0 As Integer = buffer(1)
+                Dim adc10bit0 As Integer = (adcHigh0 << 8) Or adcLow0
+                Dim currentTemp As Single = 32 + (adc10bit0 / 1023.0F) * 1.475F
+
+                Dim adcLow1 As Integer = buffer(4)
+                Dim adcHigh1 As Integer = buffer(3)  ' Assuming packet has at least 5 bytes
+                Dim adc10bit1 As Integer = (adcHigh1 << 8) Or adcLow1
+                Dim hardwareTemp As Single = 32 + (adc10bit1 / 1023.0F) * 1.475F
+
+                WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °F")
+                WriteToTextBox(HardwareTextBox, hardwareTemp.ToString("F1") & " °F")
+
+                ' === UPDATE OPERATION MODE DISPLAY ===
+                Dim mode As String = "OFF"
+                Dim bg As Color = SystemColors.Control
+                Dim fg As Color = SystemColors.ControlText
+
+                If safetyInterlock Then
+                    mode = "SAFETY LOCKOUT"
+                    bg = Color.DarkRed
+                    fg = Color.White
+                Else
                     If coolLatched Then
-                        heatLatched = False
-                        fanLatched = False
+                        mode = "COOLING"
+                        bg = Color.CornflowerBlue
+                        fg = Color.White
+                    ElseIf heatLatched Then
+                        mode = "HEATING"
+                        bg = Color.IndianRed
+                        fg = Color.White
+                    ElseIf fanLatched Then
+                        mode = "FAN ONLY"
+                        bg = Color.MediumSeaGreen
+                        fg = Color.White
                     End If
                 End If
 
-                ' Fan toggle (clears others if turning on)
-                If fanButtonNow AndAlso Not prevFanBit Then
-                    fanLatched = Not fanLatched
-                    If fanLatched Then
-                        heatLatched = False
-                        coolLatched = False
-                    End If
-                End If
-            End If
+                Me.Invoke(Sub()
+                              OperationTextBox.Text = mode
+                              OperationTextBox.BackColor = bg
+                              OperationTextBox.ForeColor = fg
+                              OperationTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
+                          End Sub)
 
-            ' Update previous states
-            prevHeatBit = heatButtonNow
-            prevCoolBit = coolButtonNow
-            prevFanBit = fanButtonNow
+                ' === UPDATE FAN TEXTBOX (Manual latch only) ===
+                Me.Invoke(Sub()
+                              If safetyInterlock Then
+                                  FanTextBox.Text = "FAN: OFF (SAFETY)"
+                                  FanTextBox.BackColor = Color.DarkRed
+                                  FanTextBox.ForeColor = Color.White
+                              ElseIf fanLatched Then
+                                  FanTextBox.Text = "FAN: ON (MANUAL)"
+                                  FanTextBox.BackColor = Color.LimeGreen
+                                  FanTextBox.ForeColor = Color.White
+                              Else
+                                  FanTextBox.Text = "FAN: OFF"
+                                  FanTextBox.BackColor = SystemColors.Control
+                                  FanTextBox.ForeColor = SystemColors.ControlText
+                              End If
+                              FanTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
+                          End Sub)
 
-            ' === TEMPERATURE CALCULATION (Bytes 1-4) ===
-            Dim adcLow0 As Integer = buffer(1)
-            Dim adcHigh0 As Integer = buffer(2)
-            Dim adc10bit0 As Integer = (adcHigh0 << 8) Or adcLow0
-            Dim currentTemp As Single = 32 + (adc10bit0 / 1023.0F) * 1.475F
-
-            Dim adcLow1 As Integer = buffer(3)
-            Dim adcHigh1 As Integer = buffer(4)  ' Assuming packet has at least 5 bytes
-            Dim adc10bit1 As Integer = (adcHigh1 << 8) Or adcLow1
-            Dim hardwareTemp As Single = 32 + (adc10bit1 / 1023.0F) * 1.475F
-
-            WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °F")
-            WriteToTextBox(HardwareTextBox, hardwareTemp.ToString("F1") & " °F")
-
-            ' === UPDATE OPERATION MODE DISPLAY ===
-            Dim mode As String = "OFF"
-            Dim bg As Color = SystemColors.Control
-            Dim fg As Color = SystemColors.ControlText
-
-            If safetyInterlock Then
-                mode = "SAFETY LOCKOUT"
-                bg = Color.DarkRed
-                fg = Color.White
-            Else
-                If coolLatched Then
-                    mode = "COOLING"
-                    bg = Color.CornflowerBlue
-                    fg = Color.White
-                ElseIf heatLatched Then
-                    mode = "HEATING"
-                    bg = Color.IndianRed
-                    fg = Color.White
-                ElseIf fanLatched Then
-                    mode = "FAN ONLY"
-                    bg = Color.MediumSeaGreen
-                    fg = Color.White
-                End If
-            End If
-
+            Catch ex As Exception
+                ' Communication continues despite errors
+            End Try
+        Catch ioEx As System.IO.IOException
+            ' Device likely disconnected
             Me.Invoke(Sub()
-                          OperationTextBox.Text = mode
-                          OperationTextBox.BackColor = bg
-                          OperationTextBox.ForeColor = fg
-                          OperationTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
+                          ConnectionStatusLabel.Text = "Connection lost (device removed)."
+                          SetDefaults()
                       End Sub)
-
-            ' === UPDATE FAN TEXTBOX (Manual latch only) ===
-            Me.Invoke(Sub()
-                          If safetyInterlock Then
-                              FanTextBox.Text = "FAN: OFF (SAFETY)"
-                              FanTextBox.BackColor = Color.DarkRed
-                              FanTextBox.ForeColor = Color.White
-                          ElseIf fanLatched Then
-                              FanTextBox.Text = "FAN: ON (MANUAL)"
-                              FanTextBox.BackColor = Color.LimeGreen
-                              FanTextBox.ForeColor = Color.White
-                          Else
-                              FanTextBox.Text = "FAN: OFF"
-                              FanTextBox.BackColor = SystemColors.Control
-                              FanTextBox.ForeColor = SystemColors.ControlText
-                          End If
-                          FanTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
-                      End Sub)
-
         Catch ex As Exception
-            ' Communication continues despite errors
+            ' Other errors: log but continue
+            Me.Invoke(Sub()
+                          SerialTextBox.AppendText($"Error: {ex.Message}{vbCrLf}")
+                      End Sub)
         End Try
     End Sub
 
 
     Function IsQuietBoard() As Boolean
-        Dim data(0) As Byte
-        data(0) = &B11110000
-        send(data)
-        Sleep(100) ' Wait for potential response
-        If SerialPort1.BytesToRead > 0 Then
-            Dim resp() As Byte = recieve()
-            ' Assume response byte 0 is &HAA for successful handshake (adjust based on actual device response)
-            If resp.Length > 0 AndAlso resp(0) = &HAA Then
-                Return True
-            End If
+        If hardwareVerified Then Return True  ' Already confirmed correct hardware
+
+        ' Clear any pending data
+        SerialPort1.DiscardInBuffer()
+
+        ' Send handshake byte F0
+        Dim handshake(0) As Byte
+        handshake(0) = &HF0
+        send(handshake)
+
+        ' Wait up to 500 ms for response
+        Dim timeout As Integer = 500
+        Dim waited As Integer = 0
+        Do While SerialPort1.BytesToRead < ExpectedHandshakeResponse.Length AndAlso waited < timeout
+            Sleep(10)
+            waited += 10
+        Loop
+
+        If SerialPort1.BytesToRead < ExpectedHandshakeResponse.Length Then
+            hardwareVerified = False
+            Return False
         End If
-        Return False
+
+        ' Read the response
+        Dim resp(ExpectedHandshakeResponse.Length - 1) As Byte
+        Dim bytesRead As Integer = SerialPort1.Read(resp, 0, ExpectedHandshakeResponse.Length)
+
+        If bytesRead <> ExpectedHandshakeResponse.Length Then
+            hardwareVerified = False
+            Return False
+        End If
+
+        ' Compare byte-by-byte with expected signature
+        Dim match As Boolean = True
+        For i As Integer = 0 To ExpectedHandshakeResponse.Length - 1
+            If resp(i) <> ExpectedHandshakeResponse(i) Then
+                match = False
+                Exit For
+            End If
+        Next
+
+        hardwareVerified = match
+        Return match
     End Function
 
 
@@ -365,7 +495,7 @@ Public Class HVAC
         CurrentTempTextBox.Text = "71.0°F"
         SetDefaults() ' Serial communication defaults
         ' AutoConnect() ' Attempt automatic connection on load
-        ReadTimer.Interval = 10 ' Set timer to poll every second (adjust as needed)
+        ReadTimer.Interval = 100 ' Set timer to poll every second (adjust as needed)
         ReadTimer.Enabled = True ' Start constant reading
         Me.Font = New Font("Segoe UI", 11, FontStyle.Bold)
         Me.BackColor = Color.FromArgb(244, 121, 32)
@@ -389,6 +519,10 @@ Public Class HVAC
         start(8) = &H2
         start(9) = &H80
         SerialPort1.Write(start, 0, 10)
+        previouslyAvailablePorts = SerialPort.GetPortNames().ToList()
+
+        AutoDetectTimer.Interval = 3000  ' Check every 3 seconds
+        AutoDetectTimer.Start()
     End Sub
 
     Private Function PortsComboBoxHasSelection() As Boolean
@@ -467,4 +601,6 @@ Public Class HVAC
     Private Sub CommunicationToolStripButton_Click(sender As Object, e As EventArgs) Handles CommunicationToolStripButton.Click
 
     End Sub
+
+
 End Class
