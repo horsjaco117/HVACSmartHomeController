@@ -65,6 +65,7 @@ Partial Class HVAC
         Me.DecrementLowTempButton = New System.Windows.Forms.Button()
         Me.IncrementLowTempButton = New System.Windows.Forms.Button()
         Me.DecrementHighTempButton = New System.Windows.Forms.Button()
+        Me.SafetyTimer = New System.Windows.Forms.Timer(Me.components)
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.ToolStrip1.SuspendLayout()
@@ -399,6 +400,10 @@ Partial Class HVAC
         Me.DecrementHighTempButton.Text = "-"
         Me.DecrementHighTempButton.UseVisualStyleBackColor = True
         '
+        'SafetyTimer
+        '
+        Me.SafetyTimer.Interval = 3000
+        '
         'HVAC
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
@@ -491,4 +496,5 @@ Partial Class HVAC
     Friend WithEvents DecrementLowTempButton As Button
     Friend WithEvents IncrementLowTempButton As Button
     Friend WithEvents DecrementHighTempButton As Button
+    Friend WithEvents SafetyTimer As Timer
 End Class

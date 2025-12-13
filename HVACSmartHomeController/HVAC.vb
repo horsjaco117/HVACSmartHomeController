@@ -27,13 +27,17 @@ Public Class HVAC
     ' For edge detection (previous state tracking)
     Private prevHeatBit As Boolean = False
     Private prevCoolBit As Boolean = False
-    Private prevFanBit As Boolean = false
+    Private prevFanBit As Boolean = False
     Private prevInterlockBit As Boolean = False
 
+    ' --- Add fields to hold the most recent temperature readings ---
+    Private currentemp As Single = 0.0F
+    Private hardwaretemp As Single = 0.0F
 
-    Private Const HYSTERESIS As Single = 0.5F  ' Degrees F; adjust as needed (common values: 0.5–1.0)
 
-    Private lastSetpoint As Single = 71.0F  ' Default
+    Private Const HYSTERESIS As Single = 0.5F ' Degrees F; adjust as needed (common values:0.5–1.0)
+
+    Private lastSetpoint As Single = 71.0F ' Default
 
     Private Const SETTINGS_FILE As String = "HVAC Settings.txt"
 
@@ -195,6 +199,33 @@ Public Class HVAC
         CurrentTimeTextBox.Text = DateTime.Now.ToString("hh:mm:ss tt")
         ' IsQuietBoard()
     End Sub
+    Sub SafetyTimer_Tick(sender As Object, e As EventArgs) Handles SafetyTimer.Tick
+        ' Declare local copies to avoid race conditions with rapid serial updates
+        Dim localCurrentTemp As Single = currentemp
+        Dim localHardwareTemp As Single = hardwaretemp
+        Dim activeMode As String = ""
+
+        If heatLatched Then
+            activeMode = "Heating"
+            If localCurrentTemp <= localHardwareTemp Then
+                MessageBox.Show("Heating Failure Detected: Room temperature is not increasing as expected." & vbCrLf &
+                            $"Room: {localCurrentTemp:F1} °F, Hardware: {localHardwareTemp:F1} °F",
+                            "Safety Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+        ElseIf coolLatched Then
+            activeMode = "Cooling"
+            If localCurrentTemp >= localHardwareTemp Then
+                MessageBox.Show("Cooling Failure Detected: Room temperature is not decreasing as expected." & vbCrLf &
+                            $"Room: {localCurrentTemp:F1} °F, Hardware: {localHardwareTemp:F1} °F",
+                            "Safety Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End If
+        End If
+
+        ' Optional: Log to SerialTextBox for debugging
+        If activeMode <> "" Then
+            SerialTextBox.AppendText($"{DateTime.Now:HH:mm:ss} - Safety check ({activeMode}): Room {localCurrentTemp:F1} °F, Hardware {localHardwareTemp:F1} °F{vbCrLf}")
+        End If
+    End Sub
 
     Private Sub DetectTimer_Tick(sender As Object, e As EventArgs)
         If SerialPort1.IsOpen Then
@@ -267,14 +298,14 @@ Public Class HVAC
                               SerialTextBox.ScrollToCaret()
                           End Sub)
 
-                ' === DIGITAL INPUTS (Byte 0) – INVERTED FOR PULLED-UP INPUTS ===
+                ' === DIGITAL INPUTS (Byte0) – INVERTED FOR PULLED-UP INPUTS ===
                 Dim digitalByte As Byte = buffer(0)
-                digitalByte = Not digitalByte  ' Pressed = 1
+                digitalByte = Not digitalByte ' Pressed =1
 
-                Dim safetyInterlock As Boolean = (digitalByte And &H1) <> 0  ' Bit 0
-                Dim heatButtonNow As Boolean = (digitalByte And &H2) <> 0  ' Bit 1
-                Dim fanButtonNow As Boolean = (digitalByte And &H4) <> 0  ' Bit 2
-                Dim coolButtonNow As Boolean = (digitalByte And &H8) <> 0  ' Bit 3
+                Dim safetyInterlock As Boolean = (digitalByte And &H1) <> 0 ' Bit0
+                Dim heatButtonNow As Boolean = (digitalByte And &H2) <> 0 ' Bit1
+                Dim fanButtonNow As Boolean = (digitalByte And &H4) <> 0 ' Bit2
+                Dim coolButtonNow As Boolean = (digitalByte And &H8) <> 0 ' Bit3
 
                 ' Display binary inputs
                 Dim binary As String = Convert.ToString(digitalByte, 2).PadLeft(8, "0"c)
@@ -283,7 +314,7 @@ Public Class HVAC
 
                 ' === EDGE DETECTION AND SOFTWARE LATCHING ===
                 If safetyInterlock AndAlso Not prevInterlockBit Then
-                    interlockLatched = True  ' Latch the interlock on rising edge
+                    interlockLatched = True ' Latch the interlock on rising edge
                     heatLatched = False
                     coolLatched = False
                     fanLatched = False
@@ -291,10 +322,10 @@ Public Class HVAC
 
                 ' Reset interlock latch on a specific condition (example: falling edge of fan button)
                 If Not fanButtonNow AndAlso prevFanBit AndAlso interlockLatched Then
-                    interlockLatched = False  ' Reset latch when fan button is released
+                    interlockLatched = False ' Reset latch when fan button is released
                 End If
 
-                If Not interlockLatched Then  ' Only allow other mode toggles if not latched
+                If Not interlockLatched Then ' Only allow other mode toggles if not latched
                     ' Heating toggle (clears others if turning on)
                     If heatButtonNow AndAlso Not prevHeatBit Then
                         heatLatched = Not heatLatched
@@ -334,16 +365,20 @@ Public Class HVAC
                 prevFanBit = fanButtonNow
                 prevInterlockBit = safetyInterlock
 
-                ' === TEMPERATURE CALCULATION (Bytes 1-4) ===
+                ' === TEMPERATURE CALCULATION (Bytes1-4) ===
                 Dim adcLow0 As Integer = buffer(2)
                 Dim adcHigh0 As Integer = buffer(1)
                 Dim adc10bit0 As Integer = (adcHigh0 << 8) Or adcLow0
                 Dim currentTemp As Single = 32 + (adc10bit0 / 1023.0F) * 0.95F
 
                 Dim adcLow1 As Integer = buffer(4)
-                Dim adcHigh1 As Integer = buffer(3)  ' Assuming packet has at least 5 bytes
+                Dim adcHigh1 As Integer = buffer(3) ' Assuming packet has at least5 bytes
                 Dim adc10bit1 As Integer = (adcHigh1 << 8) Or adcLow1
                 Dim hardwareTemp As Single = 40 + (adc10bit1 / 1023.0F) * 0.95F
+
+                ' --- Save to class-level fields so other timers/routines can read latest values ---
+                Me.currentemp = currentTemp
+                Me.hardwaretemp = hardwareTemp
 
                 WriteToTextBox(CurrentTempTextBox, currentTemp.ToString("F1") & " °F")
                 WriteToTextBox(HardwareTextBox, hardwareTemp.ToString("F1") & " °F")
@@ -353,7 +388,7 @@ Public Class HVAC
                 Dim mode As String = "OFF"
                 Dim bg As Color = SystemColors.Control
                 Dim fg As Color = SystemColors.ControlText
-                If interlockLatched Then  ' Use latched state for persistence
+                If interlockLatched Then ' Use latched state for persistence
                     mode = "SAFETY LOCKOUT"
                     bg = Color.DarkRed
                     fg = Color.White
@@ -379,6 +414,17 @@ Public Class HVAC
                               OperationTextBox.Font = New Font("Segoe UI", 16, FontStyle.Bold)
                           End Sub)
 
+                Me.Invoke(Sub()
+                              If heatLatched Or coolLatched Then
+                                  If Not SafetyTimer.Enabled Then
+                                      SafetyTimer.Start()
+                                  End If
+                              Else
+                                  If SafetyTimer.Enabled Then
+                                      SafetyTimer.Stop()
+                                  End If
+                              End If
+                          End Sub)
                 ' === UPDATE FAN TEXTBOX (Manual latch only) ===
                 Me.Invoke(Sub()
                               If safetyInterlock Then
@@ -426,7 +472,7 @@ Public Class HVAC
         handshake(0) = &HF0
         send(handshake)
 
-        ' Wait up to 500 ms for response
+        ' Wait up to500 ms for response
         Dim timeout As Integer = 500
         Dim waited As Integer = 0
         Do While SerialPort1.BytesToRead < ExpectedHandshakeResponse.Length AndAlso waited < timeout
@@ -480,7 +526,7 @@ Public Class HVAC
         Try
             Dim setpoint As Integer = CInt(SetTempTextBox.Text) ' Get user-entered setpoint
             If setpoint < 0 Or setpoint > 100 Then ' Example validation
-                MsgBox("Setpoint must be between 0 and 100.")
+                MsgBox("Setpoint must be between0 and100.")
                 Exit Sub
             End If
 
@@ -544,7 +590,7 @@ Public Class HVAC
         SerialPort1.Write(start, 0, 10)
         previouslyAvailablePorts = SerialPort.GetPortNames().ToList()
 
-        DetectTimer.Interval = 3000  ' Check every 3 seconds
+        DetectTimer.Interval = 3000 ' Check every3 seconds
         DetectTimer.Start()
     End Sub
 
@@ -556,13 +602,13 @@ Public Class HVAC
         Try
             Dim lines As New List(Of String)
 
-            ' 1. Save High Temp (SetTempTextBox)
+            '1. Save High Temp (SetTempTextBox)
             lines.Add(SetTempTextBox.Text.Trim())
 
-            ' 2. Save Low Temp (LowTempTextBox) - NEW
+            '2. Save Low Temp (LowTempTextBox) - NEW
             lines.Add(LowTempTextBox.Text.Trim())
 
-            ' 3. Save the selected COM port
+            '3. Save the selected COM port
             If PortsComboBox.SelectedItem IsNot Nothing Then
                 lines.Add(PortsComboBox.SelectedItem.ToString())
             Else
@@ -582,20 +628,20 @@ Public Class HVAC
         Try
             Dim lines() As String = System.IO.File.ReadAllLines(path)
 
-            ' Line 0 = High Setpoint
+            ' Line0 = High Setpoint
             If lines.Length > 0 AndAlso Not String.IsNullOrWhiteSpace(lines(0)) Then
                 SetTempTextBox.Text = lines(0).Trim()
             End If
 
-            ' Line 1 = Low Setpoint - NEW
+            ' Line1 = Low Setpoint - NEW
             ' We check if the line looks like a number to avoid loading an old COM port setting into the temp box
             Dim d As Double
             If lines.Length > 1 AndAlso Double.TryParse(lines(1), d) Then
                 LowTempTextBox.Text = lines(1).Trim()
             End If
 
-            ' Line 2 = COM port (Moved from index 1 to 2)
-            ' We look at the last line or index 2 to find the port
+            ' Line2 = COM port (Moved from index1 to2)
+            ' We look at the last line or index2 to find the port
             Dim portIndex As Integer = 2
             If lines.Length > portIndex AndAlso Not String.IsNullOrWhiteSpace(lines(portIndex)) Then
                 Dim savedPort As String = lines(portIndex).Trim()
@@ -626,7 +672,7 @@ Public Class HVAC
 
             'Dim data(1) As Byte
             'data(0) = &H30 ' <--- ASSUMED COMMAND for Low Temp. Change this if needed.
-            'data(1) = CByte(lowSetpoint * 2.55F) ' Scale 0-100 to 0-255 byte
+            'data(1) = CByte(lowSetpoint *2.55F) ' Scale0-100 to0-255 byte
 
             'send(data)
         Catch ex As Exception
@@ -676,22 +722,22 @@ Public Class HVAC
     Private Sub IncrementTemperatureHigh(ByVal targetTextBox As System.Windows.Forms.TextBox, ByVal change As Single)
         Dim currentTemp As Single = 0.0F
 
-        ' 1. Safely try to parse the current value. If it fails, use the default (0.0F).
+        '1. Safely try to parse the current value. If it fails, use the default (0.0F).
         If Not Single.TryParse(targetTextBox.Text, currentTemp) Then
             currentTemp = 90.0F ' Use a sensible default if the box is empty or invalid
         End If
 
-        ' 2. Calculate the new temperature
+        '2. Calculate the new temperature
         Dim newTemp As Single = currentTemp + change
 
-        ' 3. Optional: Implement min/max limits (e.g., keep temperature between 50°F and 90°F)
+        '3. Optional: Implement min/max limits (e.g., keep temperature between50°F and90°F)
         If newTemp < 50.0F Then newTemp = 50.0F
         If newTemp > 90.0F Then newTemp = 90.0F
 
-        ' 4. Update the TextBox with the new value, formatted to one decimal place.
+        '4. Update the TextBox with the new value, formatted to one decimal place.
         WriteToTextBox(targetTextBox, newTemp.ToString("F1"))
 
-        ' 5. Trigger the setpoint command to the hardware and save the setting
+        '5. Trigger the setpoint command to the hardware and save the setting
         If targetTextBox Is SetTempTextBox Then
             SendSetpoint()
         ElseIf targetTextBox Is LowTempTextBox Then
@@ -707,22 +753,22 @@ Public Class HVAC
     Private Sub IncrementTemperatureLow(ByVal targetTextBox As System.Windows.Forms.TextBox, ByVal change As Single)
         Dim currentTemp As Single = 0.0F
 
-        ' 1. Safely try to parse the current value. If it fails, use the default (0.0F).
+        '1. Safely try to parse the current value. If it fails, use the default (0.0F).
         If Not Single.TryParse(targetTextBox.Text, currentTemp) Then
             currentTemp = 70.0F ' Use a sensible default if the box is empty or invalid
         End If
 
-        ' 2. Calculate the new temperature
+        '2. Calculate the new temperature
         Dim newTemp As Single = currentTemp + change
 
-        ' 3. Optional: Implement min/max limits (e.g., keep temperature between 50°F and 90°F)
+        '3. Optional: Implement min/max limits (e.g., keep temperature between50°F and90°F)
         If newTemp < 50.0F Then newTemp = 50.0F
         If newTemp > 90.0F Then newTemp = 90.0F
 
-        ' 4. Update the TextBox with the new value, formatted to one decimal place.
+        '4. Update the TextBox with the new value, formatted to one decimal place.
         WriteToTextBox(targetTextBox, newTemp.ToString("F1"))
 
-        ' 5. Trigger the setpoint command to the hardware and save the setting
+        '5. Trigger the setpoint command to the hardware and save the setting
         If targetTextBox Is SetTempTextBox Then
             SendSetpoint()
         ElseIf targetTextBox Is LowTempTextBox Then
