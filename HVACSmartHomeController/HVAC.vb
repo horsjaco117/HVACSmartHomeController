@@ -8,7 +8,7 @@ Option Explicit On
 
 ' Serial communications imports
 Imports System.IO.Ports
-Imports System.Media
+Imports System.Sound
 Imports System.Net.Configuration
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
@@ -334,6 +334,9 @@ Public Class HVAC
                     heatLatched = False
                     coolLatched = False
                     fanLatched = False
+                    ' Send single byte0x20 to the hardware to signal safety interlock
+
+
                 End If
 
                 ' Reset interlock latch on a specific condition (example: falling edge of fan button)
@@ -405,7 +408,11 @@ Public Class HVAC
                 Dim bg As Color = SystemColors.Control
                 Dim fg As Color = SystemColors.ControlText
                 If interlockLatched Then ' Use latched state for persistence
+                    Dim data(0) As Byte
+                    data(0) = &H21
+                    send(data)
                     mode = "SAFETY LOCKOUT"
+
                     bg = Color.DarkRed
                     fg = Color.White
                 Else
@@ -413,7 +420,13 @@ Public Class HVAC
                         mode = "COOLING"
                         bg = Color.CornflowerBlue
                         fg = Color.White
+                        Dim data(0) As Byte
+                        data(0) = &H22
+                        send(data)
                     ElseIf heatLatched Then
+                        Dim data(0) As Byte
+                        data(0) = &H24
+                        send(data)
                         mode = "HEATING"
                         bg = Color.IndianRed
                         fg = Color.White
@@ -446,6 +459,8 @@ Public Class HVAC
                     fanOutput = False
                     heatOutput = False
                     coolOutput = False
+                    Dim data(1) As Byte
+                    data(0) = &H28
                 Else
                     ' Fan control
                     If fanLatched Then
@@ -468,9 +483,13 @@ Public Class HVAC
                                   If fanLatched Then
                                       FanTextBox.Text = "FAN: ON (MANUAL OVERRIDE)"
                                       FanTextBox.BackColor = Color.LimeGreen
+
                                   Else
                                       FanTextBox.Text = "FAN: ON (AUTO - " & OperationTextBox.Text & ")"
                                       FanTextBox.BackColor = Color.LightGreen
+                                      Dim data(0) As Byte
+                                      data(0) = &H22
+                                      send(data)
                                   End If
                               Else
                                   FanTextBox.Text = "FAN: OFF"
@@ -619,8 +638,10 @@ Public Class HVAC
         previouslyAvailablePorts = availablePorts.ToList()
 
         If availablePorts.Length = 0 Then
-            ' No serial devices present — don't attempt to send startup packet
-            ConnectionStatusLabel.Text = "No serial devices detected."
+            ' No serial devices present — prompt after5 seconds using SerialTimer
+            ConnectionStatusLabel.Text = "No serial devices detected. Waiting for device..."
+            SerialTimer.Interval = 5000
+            SerialTimer.Start()
         Else
             ' Only send startup packet if the port is open
             If SerialPort1 IsNot Nothing AndAlso SerialPort1.IsOpen Then
@@ -756,9 +777,6 @@ Public Class HVAC
     End Sub
 
 
-    Private Sub CommunicationToolStripButton_Click(sender As Object, e As EventArgs) Handles CommunicationToolStripButton.Click
-
-    End Sub
 
     Private Sub IncrementHighTempButton_Click(sender As Object, e As EventArgs) Handles IncrementHighTempButton.Click
         IncrementTemperatureHigh(SetTempTextBox, 0.5F)
@@ -888,4 +906,44 @@ Public Class HVAC
                   End Sub)
     End Sub
 
+    Private Sub SerialTimer_Tick(sender As Object, e As EventArgs) Handles SerialTimer.Tick
+        ' Check for available ports first
+        Dim ports = SerialPort.GetPortNames()
+        If ports.Length > 0 Then
+            ' Device appeared — stop timer and attempt to connect
+            SerialTimer.Stop()
+            previouslyAvailablePorts = ports.ToList()
+            Try
+                If SerialPort1 IsNot Nothing AndAlso SerialPort1.IsOpen Then
+                    Dim start(10) As Byte
+                    start(0) = &H30
+                    start(1) = &H20
+                    start(2) = &H0
+                    start(3) = &H5F
+                    start(4) = &H41
+                    start(5) = &H19
+                    start(6) = &H0
+                    start(7) = &H42
+                    start(8) = &H2
+                    start(9) = &H80
+                    'AutoConnect
+                End If
+            Catch
+                ' ignore
+            End Try
+            Return
+        End If
+
+        ' Still no device after5s — prompt the user. Offer Retry or Cancel.
+        Dim res = MessageBox.Show("No serial device detected. Please connect your device now.
+Would you like to retry checking?", "No Serial Device", MessageBoxButtons.RetryCancel, MessageBoxIcon.Warning)
+        If res = DialogResult.Cancel Then
+            SerialTimer.Stop()
+            ConnectionStatusLabel.Text = "No serial device. Connect device to enable communication."
+        Else
+            ' Retry: do nothing; the timer will tick again in5s
+            ConnectionStatusLabel.Text = "Retrying to detect serial device..."
+            GetPorts()
+        End If
+    End Sub
 End Class
