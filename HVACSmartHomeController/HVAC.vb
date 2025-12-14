@@ -613,21 +613,38 @@ Public Class HVAC
         If PortsComboBoxHasSelection() Then
             connect()
             write()
-
         End If
-        Dim start(10) As Byte
-        start(0) = &H30
-        start(1) = &H20
-        start(2) = &H0
-        start(3) = &H5F
-        start(4) = &H41
-        start(5) = &H19
-        start(6) = &H0
-        start(7) = &H42
-        start(8) = &H2
-        start(9) = &H80
-        SerialPort1.Write(start, 0, 10)
-        previouslyAvailablePorts = SerialPort.GetPortNames().ToList()
+
+        Dim availablePorts = SerialPort.GetPortNames()
+        previouslyAvailablePorts = availablePorts.ToList()
+
+        If availablePorts.Length = 0 Then
+            ' No serial devices present — don't attempt to send startup packet
+            ConnectionStatusLabel.Text = "No serial devices detected."
+        Else
+            ' Only send startup packet if the port is open
+            If SerialPort1 IsNot Nothing AndAlso SerialPort1.IsOpen Then
+                Dim start(10) As Byte
+                start(0) = &H30
+                start(1) = &H20
+                start(2) = &H0
+                start(3) = &H5F
+                start(4) = &H41
+                start(5) = &H19
+                start(6) = &H0
+                start(7) = &H42
+                start(8) = &H2
+                start(9) = &H80
+                Try
+                    SerialPort1.Write(start, 0, 10)
+                Catch ex As Exception
+                    ' Ignore write errors — device may have disappeared
+                    Me.Invoke(Sub()
+                                  ConnectionStatusLabel.Text = "Failed to send startup packet."
+                              End Sub)
+                End Try
+            End If
+        End If
 
         DetectTimer.Interval = 3000 ' Check every3 seconds
         DetectTimer.Start()
