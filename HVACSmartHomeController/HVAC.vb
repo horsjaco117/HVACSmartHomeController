@@ -78,6 +78,14 @@ Public Class HVAC
         Return System.IO.Path.Combine(Application.StartupPath, SETTINGS_FILE)
     End Function
 
+    ' Update connection status label safely from any thread
+    Private Sub UpdateConnectionStatus(status As String)
+        If Me.InvokeRequired Then
+            Me.Invoke(New Action(Sub() ConnectionStatusLabel.Text = status))
+        Else
+            ConnectionStatusLabel.Text = status
+        End If
+    End Sub
 
     ' Serial Communications----------------------------------------------------------
     Sub SetDefaults() ' Set's default serial pieces and shows COM ports
@@ -139,6 +147,8 @@ Public Class HVAC
             SerialPort1.DataBits = 8
             SerialPort1.PortName = CStr(PortsComboBox.SelectedItem)
             SerialPort1.Open()
+            ' Indicate port opened; hardware verification may follow
+            UpdateConnectionStatus($"Port open: {SerialPort1.PortName}")
         Catch ex As Exception
             MsgBox(ex.Message)
             SetDefaults()
@@ -574,6 +584,11 @@ Public Class HVAC
         Next
 
         hardwareVerified = match
+        If hardwareVerified Then
+            UpdateConnectionStatus($"Connected and verified on {SerialPort1.PortName}")
+        Else
+            UpdateConnectionStatus($"Connected (unverified) on {If(SerialPort1 IsNot Nothing, SerialPort1.PortName, "?")}")
+        End If
         Return match
     End Function
 
@@ -777,7 +792,7 @@ Public Class HVAC
         Return False
     End Function
 
-    Private Sub ExitToolStripButton_Click(sender As Object, e As EventArgs) Handles ExitToolStripButton.Click
+    Private Sub ExitToolStripButton_Click(sender As Object, e As EventArgs)
         Me.Close()
     End Sub
 

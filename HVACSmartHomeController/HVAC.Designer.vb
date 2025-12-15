@@ -23,7 +23,6 @@ Partial Class HVAC
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(HVAC))
         Me.SerialPort1 = New System.IO.Ports.SerialPort(Me.components)
         Me.ReadTimer = New System.Windows.Forms.Timer(Me.components)
         Me.SetButton = New System.Windows.Forms.Button()
@@ -47,10 +46,6 @@ Partial Class HVAC
         Me.FanLabel = New System.Windows.Forms.Label()
         Me.HardwareTextBox = New System.Windows.Forms.TextBox()
         Me.HadwareTempTextBoxLabel = New System.Windows.Forms.Label()
-        Me.ToolStrip1 = New System.Windows.Forms.ToolStrip()
-        Me.CommunicationToolStripButton = New System.Windows.Forms.ToolStripButton()
-        Me.ExitToolStripButton = New System.Windows.Forms.ToolStripButton()
-        Me.SaveSettingsToolStripButton = New System.Windows.Forms.ToolStripButton()
         Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
         Me.LowTempTextBox = New System.Windows.Forms.TextBox()
         Me.TargetTempLowLabel = New System.Windows.Forms.Label()
@@ -63,7 +58,6 @@ Partial Class HVAC
         Me.SerialTimer = New System.Windows.Forms.Timer(Me.components)
         Me.ClockTextBox = New System.Windows.Forms.TextBox()
         Me.ClockLabel = New System.Windows.Forms.Label()
-        Me.ToolStrip1.SuspendLayout()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -84,6 +78,7 @@ Partial Class HVAC
         '
         'ExitButton
         '
+        Me.ExitButton.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.ExitButton.Location = New System.Drawing.Point(807, 512)
         Me.ExitButton.Name = "ExitButton"
         Me.ExitButton.Size = New System.Drawing.Size(210, 87)
@@ -93,6 +88,9 @@ Partial Class HVAC
         '
         'CurrentTempTextBox
         '
+        Me.CurrentTempTextBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.CurrentTempTextBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 25.0!)
         Me.CurrentTempTextBox.Location = New System.Drawing.Point(373, 280)
         Me.CurrentTempTextBox.Name = "CurrentTempTextBox"
@@ -109,6 +107,9 @@ Partial Class HVAC
         '
         'SetTempTextBox
         '
+        Me.SetTempTextBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.SetTempTextBox.Location = New System.Drawing.Point(373, 423)
         Me.SetTempTextBox.Name = "SetTempTextBox"
         Me.SetTempTextBox.Size = New System.Drawing.Size(100, 26)
@@ -124,8 +125,11 @@ Partial Class HVAC
         '
         'ConnectionStatusLabel
         '
+        Me.ConnectionStatusLabel.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.ConnectionStatusLabel.AutoSize = True
-        Me.ConnectionStatusLabel.Location = New System.Drawing.Point(31, 9)
+        Me.ConnectionStatusLabel.Location = New System.Drawing.Point(12, 9)
         Me.ConnectionStatusLabel.Name = "ConnectionStatusLabel"
         Me.ConnectionStatusLabel.Size = New System.Drawing.Size(72, 20)
         Me.ConnectionStatusLabel.TabIndex = 9
@@ -151,6 +155,9 @@ Partial Class HVAC
         '
         'TargetTempLabel
         '
+        Me.TargetTempLabel.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.TargetTempLabel.AutoSize = True
         Me.TargetTempLabel.Location = New System.Drawing.Point(369, 400)
         Me.TargetTempLabel.Name = "TargetTempLabel"
@@ -160,6 +167,9 @@ Partial Class HVAC
         '
         'CurrentTempTextBoxLabel
         '
+        Me.CurrentTempTextBoxLabel.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.CurrentTempTextBoxLabel.AutoSize = True
         Me.CurrentTempTextBoxLabel.Location = New System.Drawing.Point(369, 257)
         Me.CurrentTempTextBoxLabel.Name = "CurrentTempTextBoxLabel"
@@ -201,6 +211,9 @@ Partial Class HVAC
         '
         'OperationTextBoxLabel
         '
+        Me.OperationTextBoxLabel.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.OperationTextBoxLabel.AutoSize = True
         Me.OperationTextBoxLabel.Location = New System.Drawing.Point(757, 136)
         Me.OperationTextBoxLabel.Name = "OperationTextBoxLabel"
@@ -210,6 +223,9 @@ Partial Class HVAC
         '
         'OperationTextBox
         '
+        Me.OperationTextBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.OperationTextBox.Location = New System.Drawing.Point(761, 162)
         Me.OperationTextBox.Name = "OperationTextBox"
         Me.OperationTextBox.Size = New System.Drawing.Size(100, 26)
@@ -217,6 +233,9 @@ Partial Class HVAC
         '
         'FanTextBox
         '
+        Me.FanTextBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.FanTextBox.Location = New System.Drawing.Point(761, 223)
         Me.FanTextBox.Name = "FanTextBox"
         Me.FanTextBox.Size = New System.Drawing.Size(100, 26)
@@ -224,6 +243,9 @@ Partial Class HVAC
         '
         'FanLabel
         '
+        Me.FanLabel.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.FanLabel.AutoSize = True
         Me.FanLabel.Location = New System.Drawing.Point(757, 200)
         Me.FanLabel.Name = "FanLabel"
@@ -233,6 +255,9 @@ Partial Class HVAC
         '
         'HardwareTextBox
         '
+        Me.HardwareTextBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.HardwareTextBox.Location = New System.Drawing.Point(373, 582)
         Me.HardwareTextBox.Name = "HardwareTextBox"
         Me.HardwareTextBox.Size = New System.Drawing.Size(100, 26)
@@ -240,6 +265,9 @@ Partial Class HVAC
         '
         'HadwareTempTextBoxLabel
         '
+        Me.HadwareTempTextBoxLabel.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.HadwareTempTextBoxLabel.AutoSize = True
         Me.HadwareTempTextBoxLabel.Location = New System.Drawing.Point(369, 546)
         Me.HadwareTempTextBoxLabel.Name = "HadwareTempTextBoxLabel"
@@ -247,45 +275,11 @@ Partial Class HVAC
         Me.HadwareTempTextBoxLabel.TabIndex = 27
         Me.HadwareTempTextBoxLabel.Text = "Hardware Temperature"
         '
-        'ToolStrip1
-        '
-        Me.ToolStrip1.ImageScalingSize = New System.Drawing.Size(24, 24)
-        Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CommunicationToolStripButton, Me.ExitToolStripButton, Me.SaveSettingsToolStripButton})
-        Me.ToolStrip1.Location = New System.Drawing.Point(0, 0)
-        Me.ToolStrip1.Name = "ToolStrip1"
-        Me.ToolStrip1.Size = New System.Drawing.Size(1101, 33)
-        Me.ToolStrip1.TabIndex = 28
-        Me.ToolStrip1.Text = "ToolStrip1"
-        '
-        'CommunicationToolStripButton
-        '
-        Me.CommunicationToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
-        Me.CommunicationToolStripButton.Image = CType(resources.GetObject("CommunicationToolStripButton.Image"), System.Drawing.Image)
-        Me.CommunicationToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.CommunicationToolStripButton.Name = "CommunicationToolStripButton"
-        Me.CommunicationToolStripButton.Size = New System.Drawing.Size(34, 28)
-        Me.CommunicationToolStripButton.Text = "COM Setup"
-        '
-        'ExitToolStripButton
-        '
-        Me.ExitToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
-        Me.ExitToolStripButton.Image = CType(resources.GetObject("ExitToolStripButton.Image"), System.Drawing.Image)
-        Me.ExitToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.ExitToolStripButton.Name = "ExitToolStripButton"
-        Me.ExitToolStripButton.Size = New System.Drawing.Size(34, 28)
-        Me.ExitToolStripButton.Text = "Exit"
-        '
-        'SaveSettingsToolStripButton
-        '
-        Me.SaveSettingsToolStripButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image
-        Me.SaveSettingsToolStripButton.Image = CType(resources.GetObject("SaveSettingsToolStripButton.Image"), System.Drawing.Image)
-        Me.SaveSettingsToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta
-        Me.SaveSettingsToolStripButton.Name = "SaveSettingsToolStripButton"
-        Me.SaveSettingsToolStripButton.Size = New System.Drawing.Size(34, 28)
-        Me.SaveSettingsToolStripButton.Text = "ToolStripButton3"
-        '
         'LowTempTextBox
         '
+        Me.LowTempTextBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.LowTempTextBox.Location = New System.Drawing.Point(373, 493)
         Me.LowTempTextBox.Name = "LowTempTextBox"
         Me.LowTempTextBox.Size = New System.Drawing.Size(100, 26)
@@ -293,6 +287,9 @@ Partial Class HVAC
         '
         'TargetTempLowLabel
         '
+        Me.TargetTempLowLabel.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.TargetTempLowLabel.AutoSize = True
         Me.TargetTempLowLabel.Location = New System.Drawing.Point(369, 470)
         Me.TargetTempLowLabel.Name = "TargetTempLowLabel"
@@ -302,6 +299,9 @@ Partial Class HVAC
         '
         'IncrementHighTempButton
         '
+        Me.IncrementHighTempButton.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.IncrementHighTempButton.Location = New System.Drawing.Point(325, 423)
         Me.IncrementHighTempButton.Name = "IncrementHighTempButton"
         Me.IncrementHighTempButton.Size = New System.Drawing.Size(42, 33)
@@ -311,6 +311,9 @@ Partial Class HVAC
         '
         'DecrementLowTempButton
         '
+        Me.DecrementLowTempButton.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DecrementLowTempButton.Location = New System.Drawing.Point(486, 486)
         Me.DecrementLowTempButton.Name = "DecrementLowTempButton"
         Me.DecrementLowTempButton.Size = New System.Drawing.Size(43, 33)
@@ -320,6 +323,9 @@ Partial Class HVAC
         '
         'IncrementLowTempButton
         '
+        Me.IncrementLowTempButton.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.IncrementLowTempButton.Location = New System.Drawing.Point(325, 489)
         Me.IncrementLowTempButton.Name = "IncrementLowTempButton"
         Me.IncrementLowTempButton.Size = New System.Drawing.Size(36, 26)
@@ -329,6 +335,9 @@ Partial Class HVAC
         '
         'DecrementHighTempButton
         '
+        Me.DecrementHighTempButton.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DecrementHighTempButton.Location = New System.Drawing.Point(486, 423)
         Me.DecrementHighTempButton.Name = "DecrementHighTempButton"
         Me.DecrementHighTempButton.Size = New System.Drawing.Size(36, 26)
@@ -342,6 +351,7 @@ Partial Class HVAC
         '
         'PictureBox2
         '
+        Me.PictureBox2.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.PictureBox2.Image = Global.HVACSmartHomeController.My.Resources.Resources.ISU_logo
         Me.PictureBox2.Location = New System.Drawing.Point(726, 628)
         Me.PictureBox2.Name = "PictureBox2"
@@ -354,6 +364,9 @@ Partial Class HVAC
         '
         'ClockTextBox
         '
+        Me.ClockTextBox.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.ClockTextBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 30.0!)
         Me.ClockTextBox.Location = New System.Drawing.Point(234, 174)
         Me.ClockTextBox.Name = "ClockTextBox"
@@ -362,6 +375,9 @@ Partial Class HVAC
         '
         'ClockLabel
         '
+        Me.ClockLabel.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.ClockLabel.AutoSize = True
         Me.ClockLabel.Location = New System.Drawing.Point(406, 138)
         Me.ClockLabel.Name = "ClockLabel"
@@ -373,7 +389,7 @@ Partial Class HVAC
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1101, 880)
+        Me.ClientSize = New System.Drawing.Size(1079, 883)
         Me.Controls.Add(Me.ClockLabel)
         Me.Controls.Add(Me.ClockTextBox)
         Me.Controls.Add(Me.DecrementHighTempButton)
@@ -382,7 +398,6 @@ Partial Class HVAC
         Me.Controls.Add(Me.IncrementHighTempButton)
         Me.Controls.Add(Me.TargetTempLowLabel)
         Me.Controls.Add(Me.LowTempTextBox)
-        Me.Controls.Add(Me.ToolStrip1)
         Me.Controls.Add(Me.HadwareTempTextBoxLabel)
         Me.Controls.Add(Me.HardwareTextBox)
         Me.Controls.Add(Me.PictureBox2)
@@ -406,8 +421,7 @@ Partial Class HVAC
         Me.Controls.Add(Me.SetButton)
         Me.Controls.Add(Me.SerialTextBox)
         Me.Name = "HVAC"
-        Me.ToolStrip1.ResumeLayout(False)
-        Me.ToolStrip1.PerformLayout()
+        Me.Text = "Horsley HVAC"
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
@@ -438,10 +452,6 @@ Partial Class HVAC
     Friend WithEvents PictureBox2 As PictureBox
     Friend WithEvents HardwareTextBox As TextBox
     Friend WithEvents HadwareTempTextBoxLabel As Label
-    Friend WithEvents ToolStrip1 As ToolStrip
-    Friend WithEvents CommunicationToolStripButton As ToolStripButton
-    Friend WithEvents ExitToolStripButton As ToolStripButton
-    Friend WithEvents SaveSettingsToolStripButton As ToolStripButton
     Friend WithEvents Timer1 As Timer
     Friend WithEvents LowTempTextBox As TextBox
     Friend WithEvents TargetTempLowLabel As Label
