@@ -25,10 +25,7 @@ Partial Class HVAC
         Me.components = New System.ComponentModel.Container()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(HVAC))
         Me.SerialPort1 = New System.IO.Ports.SerialPort(Me.components)
-        Me.SerialPortsComboBox = New System.Windows.Forms.ComboBox()
-        Me.SerialPortComboLabel = New System.Windows.Forms.Label()
         Me.ReadTimer = New System.Windows.Forms.Timer(Me.components)
-        Me.COMButton = New System.Windows.Forms.Button()
         Me.SetButton = New System.Windows.Forms.Button()
         Me.ExitButton = New System.Windows.Forms.Button()
         Me.CurrentTempTextBox = New System.Windows.Forms.TextBox()
@@ -46,7 +43,6 @@ Partial Class HVAC
         Me.CurrentTimeLabel = New System.Windows.Forms.Label()
         Me.OperationTextBoxLabel = New System.Windows.Forms.Label()
         Me.OperationTextBox = New System.Windows.Forms.TextBox()
-        Me.Label1 = New System.Windows.Forms.Label()
         Me.FanTextBox = New System.Windows.Forms.TextBox()
         Me.FanLabel = New System.Windows.Forms.Label()
         Me.HardwareTextBox = New System.Windows.Forms.TextBox()
@@ -74,38 +70,12 @@ Partial Class HVAC
         'SerialPort1
         '
         '
-        'SerialPortsComboBox
-        '
-        Me.SerialPortsComboBox.FormattingEnabled = True
-        Me.SerialPortsComboBox.Location = New System.Drawing.Point(12, 263)
-        Me.SerialPortsComboBox.Name = "SerialPortsComboBox"
-        Me.SerialPortsComboBox.Size = New System.Drawing.Size(121, 28)
-        Me.SerialPortsComboBox.TabIndex = 0
-        '
-        'SerialPortComboLabel
-        '
-        Me.SerialPortComboLabel.AutoSize = True
-        Me.SerialPortComboLabel.Location = New System.Drawing.Point(8, 240)
-        Me.SerialPortComboLabel.Name = "SerialPortComboLabel"
-        Me.SerialPortComboLabel.Size = New System.Drawing.Size(78, 20)
-        Me.SerialPortComboLabel.TabIndex = 1
-        Me.SerialPortComboLabel.Text = "COM Port"
-        '
         'ReadTimer
         '
         '
-        'COMButton
-        '
-        Me.COMButton.Location = New System.Drawing.Point(153, 587)
-        Me.COMButton.Name = "COMButton"
-        Me.COMButton.Size = New System.Drawing.Size(225, 61)
-        Me.COMButton.TabIndex = 2
-        Me.COMButton.Text = "COM"
-        Me.COMButton.UseVisualStyleBackColor = True
-        '
         'SetButton
         '
-        Me.SetButton.Location = New System.Drawing.Point(803, 60)
+        Me.SetButton.Location = New System.Drawing.Point(738, 786)
         Me.SetButton.Name = "SetButton"
         Me.SetButton.Size = New System.Drawing.Size(104, 57)
         Me.SetButton.TabIndex = 3
@@ -123,22 +93,23 @@ Partial Class HVAC
         '
         'CurrentTempTextBox
         '
-        Me.CurrentTempTextBox.Location = New System.Drawing.Point(598, 197)
+        Me.CurrentTempTextBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 25.0!)
+        Me.CurrentTempTextBox.Location = New System.Drawing.Point(373, 280)
         Me.CurrentTempTextBox.Name = "CurrentTempTextBox"
-        Me.CurrentTempTextBox.Size = New System.Drawing.Size(100, 26)
+        Me.CurrentTempTextBox.Size = New System.Drawing.Size(149, 64)
         Me.CurrentTempTextBox.TabIndex = 5
         '
         'SerialTextBox
         '
-        Me.SerialTextBox.Location = New System.Drawing.Point(0, 75)
+        Me.SerialTextBox.Location = New System.Drawing.Point(748, 637)
         Me.SerialTextBox.Multiline = True
         Me.SerialTextBox.Name = "SerialTextBox"
-        Me.SerialTextBox.Size = New System.Drawing.Size(505, 123)
+        Me.SerialTextBox.Size = New System.Drawing.Size(70, 57)
         Me.SerialTextBox.TabIndex = 6
         '
         'SetTempTextBox
         '
-        Me.SetTempTextBox.Location = New System.Drawing.Point(598, 75)
+        Me.SetTempTextBox.Location = New System.Drawing.Point(373, 423)
         Me.SetTempTextBox.Name = "SetTempTextBox"
         Me.SetTempTextBox.Size = New System.Drawing.Size(100, 26)
         Me.SetTempTextBox.TabIndex = 7
@@ -146,7 +117,7 @@ Partial Class HVAC
         'PortsComboBox
         '
         Me.PortsComboBox.FormattingEnabled = True
-        Me.PortsComboBox.Location = New System.Drawing.Point(12, 587)
+        Me.PortsComboBox.Location = New System.Drawing.Point(722, 801)
         Me.PortsComboBox.Name = "PortsComboBox"
         Me.PortsComboBox.Size = New System.Drawing.Size(121, 28)
         Me.PortsComboBox.TabIndex = 8
@@ -163,7 +134,7 @@ Partial Class HVAC
         'SerialTextBoxLabel
         '
         Me.SerialTextBoxLabel.AutoSize = True
-        Me.SerialTextBoxLabel.Location = New System.Drawing.Point(8, 52)
+        Me.SerialTextBoxLabel.Location = New System.Drawing.Point(734, 628)
         Me.SerialTextBoxLabel.Name = "SerialTextBoxLabel"
         Me.SerialTextBoxLabel.Size = New System.Drawing.Size(88, 20)
         Me.SerialTextBoxLabel.TabIndex = 10
@@ -172,7 +143,7 @@ Partial Class HVAC
         'COMPortLabel
         '
         Me.COMPortLabel.AutoSize = True
-        Me.COMPortLabel.Location = New System.Drawing.Point(12, 554)
+        Me.COMPortLabel.Location = New System.Drawing.Point(722, 768)
         Me.COMPortLabel.Name = "COMPortLabel"
         Me.COMPortLabel.Size = New System.Drawing.Size(86, 20)
         Me.COMPortLabel.TabIndex = 11
@@ -181,7 +152,7 @@ Partial Class HVAC
         'TargetTempLabel
         '
         Me.TargetTempLabel.AutoSize = True
-        Me.TargetTempLabel.Location = New System.Drawing.Point(594, 52)
+        Me.TargetTempLabel.Location = New System.Drawing.Point(369, 400)
         Me.TargetTempLabel.Name = "TargetTempLabel"
         Me.TargetTempLabel.Size = New System.Drawing.Size(187, 20)
         Me.TargetTempLabel.TabIndex = 12
@@ -190,7 +161,7 @@ Partial Class HVAC
         'CurrentTempTextBoxLabel
         '
         Me.CurrentTempTextBoxLabel.AutoSize = True
-        Me.CurrentTempTextBoxLabel.Location = New System.Drawing.Point(594, 174)
+        Me.CurrentTempTextBoxLabel.Location = New System.Drawing.Point(369, 257)
         Me.CurrentTempTextBoxLabel.Name = "CurrentTempTextBoxLabel"
         Me.CurrentTempTextBoxLabel.Size = New System.Drawing.Size(153, 20)
         Me.CurrentTempTextBoxLabel.TabIndex = 13
@@ -198,7 +169,7 @@ Partial Class HVAC
         '
         'DigitalInputsTextBox
         '
-        Me.DigitalInputsTextBox.Location = New System.Drawing.Point(12, 331)
+        Me.DigitalInputsTextBox.Location = New System.Drawing.Point(748, 716)
         Me.DigitalInputsTextBox.Name = "DigitalInputsTextBox"
         Me.DigitalInputsTextBox.Size = New System.Drawing.Size(113, 26)
         Me.DigitalInputsTextBox.TabIndex = 14
@@ -206,7 +177,7 @@ Partial Class HVAC
         'DigitalInputTextBoxLabel
         '
         Me.DigitalInputTextBoxLabel.AutoSize = True
-        Me.DigitalInputTextBoxLabel.Location = New System.Drawing.Point(12, 308)
+        Me.DigitalInputTextBoxLabel.Location = New System.Drawing.Point(748, 693)
         Me.DigitalInputTextBoxLabel.Name = "DigitalInputTextBoxLabel"
         Me.DigitalInputTextBoxLabel.Size = New System.Drawing.Size(102, 20)
         Me.DigitalInputTextBoxLabel.TabIndex = 15
@@ -214,7 +185,7 @@ Partial Class HVAC
         '
         'CurrentTimeTextBox
         '
-        Me.CurrentTimeTextBox.Location = New System.Drawing.Point(917, 62)
+        Me.CurrentTimeTextBox.Location = New System.Drawing.Point(836, 765)
         Me.CurrentTimeTextBox.Name = "CurrentTimeTextBox"
         Me.CurrentTimeTextBox.Size = New System.Drawing.Size(100, 26)
         Me.CurrentTimeTextBox.TabIndex = 17
@@ -222,7 +193,7 @@ Partial Class HVAC
         'CurrentTimeLabel
         '
         Me.CurrentTimeLabel.AutoSize = True
-        Me.CurrentTimeLabel.Location = New System.Drawing.Point(913, 30)
+        Me.CurrentTimeLabel.Location = New System.Drawing.Point(832, 733)
         Me.CurrentTimeLabel.Name = "CurrentTimeLabel"
         Me.CurrentTimeLabel.Size = New System.Drawing.Size(100, 20)
         Me.CurrentTimeLabel.TabIndex = 18
@@ -231,7 +202,7 @@ Partial Class HVAC
         'OperationTextBoxLabel
         '
         Me.OperationTextBoxLabel.AutoSize = True
-        Me.OperationTextBoxLabel.Location = New System.Drawing.Point(913, 266)
+        Me.OperationTextBoxLabel.Location = New System.Drawing.Point(757, 136)
         Me.OperationTextBoxLabel.Name = "OperationTextBoxLabel"
         Me.OperationTextBoxLabel.Size = New System.Drawing.Size(79, 20)
         Me.OperationTextBoxLabel.TabIndex = 19
@@ -239,23 +210,14 @@ Partial Class HVAC
         '
         'OperationTextBox
         '
-        Me.OperationTextBox.Location = New System.Drawing.Point(917, 292)
+        Me.OperationTextBox.Location = New System.Drawing.Point(761, 162)
         Me.OperationTextBox.Name = "OperationTextBox"
         Me.OperationTextBox.Size = New System.Drawing.Size(100, 26)
         Me.OperationTextBox.TabIndex = 20
         '
-        'Label1
-        '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(240, 331)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(172, 20)
-        Me.Label1.TabIndex = 21
-        Me.Label1.Text = "D2 Cooling D5 Heating"
-        '
         'FanTextBox
         '
-        Me.FanTextBox.Location = New System.Drawing.Point(917, 397)
+        Me.FanTextBox.Location = New System.Drawing.Point(761, 223)
         Me.FanTextBox.Name = "FanTextBox"
         Me.FanTextBox.Size = New System.Drawing.Size(100, 26)
         Me.FanTextBox.TabIndex = 22
@@ -263,7 +225,7 @@ Partial Class HVAC
         'FanLabel
         '
         Me.FanLabel.AutoSize = True
-        Me.FanLabel.Location = New System.Drawing.Point(913, 374)
+        Me.FanLabel.Location = New System.Drawing.Point(757, 200)
         Me.FanLabel.Name = "FanLabel"
         Me.FanLabel.Size = New System.Drawing.Size(88, 20)
         Me.FanLabel.TabIndex = 23
@@ -271,7 +233,7 @@ Partial Class HVAC
         '
         'HardwareTextBox
         '
-        Me.HardwareTextBox.Location = New System.Drawing.Point(917, 148)
+        Me.HardwareTextBox.Location = New System.Drawing.Point(373, 582)
         Me.HardwareTextBox.Name = "HardwareTextBox"
         Me.HardwareTextBox.Size = New System.Drawing.Size(100, 26)
         Me.HardwareTextBox.TabIndex = 26
@@ -279,7 +241,7 @@ Partial Class HVAC
         'HadwareTempTextBoxLabel
         '
         Me.HadwareTempTextBoxLabel.AutoSize = True
-        Me.HadwareTempTextBoxLabel.Location = New System.Drawing.Point(913, 112)
+        Me.HadwareTempTextBoxLabel.Location = New System.Drawing.Point(369, 546)
         Me.HadwareTempTextBoxLabel.Name = "HadwareTempTextBoxLabel"
         Me.HadwareTempTextBoxLabel.Size = New System.Drawing.Size(173, 20)
         Me.HadwareTempTextBoxLabel.TabIndex = 27
@@ -324,7 +286,7 @@ Partial Class HVAC
         '
         'LowTempTextBox
         '
-        Me.LowTempTextBox.Location = New System.Drawing.Point(598, 145)
+        Me.LowTempTextBox.Location = New System.Drawing.Point(373, 493)
         Me.LowTempTextBox.Name = "LowTempTextBox"
         Me.LowTempTextBox.Size = New System.Drawing.Size(100, 26)
         Me.LowTempTextBox.TabIndex = 29
@@ -332,7 +294,7 @@ Partial Class HVAC
         'TargetTempLowLabel
         '
         Me.TargetTempLowLabel.AutoSize = True
-        Me.TargetTempLowLabel.Location = New System.Drawing.Point(594, 122)
+        Me.TargetTempLowLabel.Location = New System.Drawing.Point(369, 470)
         Me.TargetTempLowLabel.Name = "TargetTempLowLabel"
         Me.TargetTempLowLabel.Size = New System.Drawing.Size(183, 20)
         Me.TargetTempLowLabel.TabIndex = 30
@@ -340,7 +302,7 @@ Partial Class HVAC
         '
         'IncrementHighTempButton
         '
-        Me.IncrementHighTempButton.Location = New System.Drawing.Point(550, 75)
+        Me.IncrementHighTempButton.Location = New System.Drawing.Point(325, 423)
         Me.IncrementHighTempButton.Name = "IncrementHighTempButton"
         Me.IncrementHighTempButton.Size = New System.Drawing.Size(42, 33)
         Me.IncrementHighTempButton.TabIndex = 31
@@ -349,7 +311,7 @@ Partial Class HVAC
         '
         'DecrementLowTempButton
         '
-        Me.DecrementLowTempButton.Location = New System.Drawing.Point(711, 138)
+        Me.DecrementLowTempButton.Location = New System.Drawing.Point(486, 486)
         Me.DecrementLowTempButton.Name = "DecrementLowTempButton"
         Me.DecrementLowTempButton.Size = New System.Drawing.Size(43, 33)
         Me.DecrementLowTempButton.TabIndex = 32
@@ -358,7 +320,7 @@ Partial Class HVAC
         '
         'IncrementLowTempButton
         '
-        Me.IncrementLowTempButton.Location = New System.Drawing.Point(550, 141)
+        Me.IncrementLowTempButton.Location = New System.Drawing.Point(325, 489)
         Me.IncrementLowTempButton.Name = "IncrementLowTempButton"
         Me.IncrementLowTempButton.Size = New System.Drawing.Size(36, 26)
         Me.IncrementLowTempButton.TabIndex = 33
@@ -367,7 +329,7 @@ Partial Class HVAC
         '
         'DecrementHighTempButton
         '
-        Me.DecrementHighTempButton.Location = New System.Drawing.Point(711, 75)
+        Me.DecrementHighTempButton.Location = New System.Drawing.Point(486, 423)
         Me.DecrementHighTempButton.Name = "DecrementHighTempButton"
         Me.DecrementHighTempButton.Size = New System.Drawing.Size(36, 26)
         Me.DecrementHighTempButton.TabIndex = 34
@@ -381,7 +343,7 @@ Partial Class HVAC
         'PictureBox2
         '
         Me.PictureBox2.Image = Global.HVACSmartHomeController.My.Resources.Resources.ISU_logo
-        Me.PictureBox2.Location = New System.Drawing.Point(738, 628)
+        Me.PictureBox2.Location = New System.Drawing.Point(726, 628)
         Me.PictureBox2.Name = "PictureBox2"
         Me.PictureBox2.Size = New System.Drawing.Size(275, 218)
         Me.PictureBox2.TabIndex = 25
@@ -392,15 +354,16 @@ Partial Class HVAC
         '
         'ClockTextBox
         '
-        Me.ClockTextBox.Location = New System.Drawing.Point(598, 292)
+        Me.ClockTextBox.Font = New System.Drawing.Font("Microsoft Sans Serif", 30.0!)
+        Me.ClockTextBox.Location = New System.Drawing.Point(234, 174)
         Me.ClockTextBox.Name = "ClockTextBox"
-        Me.ClockTextBox.Size = New System.Drawing.Size(239, 26)
+        Me.ClockTextBox.Size = New System.Drawing.Size(492, 75)
         Me.ClockTextBox.TabIndex = 36
         '
         'ClockLabel
         '
         Me.ClockLabel.AutoSize = True
-        Me.ClockLabel.Location = New System.Drawing.Point(598, 265)
+        Me.ClockLabel.Location = New System.Drawing.Point(406, 138)
         Me.ClockLabel.Name = "ClockLabel"
         Me.ClockLabel.Size = New System.Drawing.Size(48, 20)
         Me.ClockLabel.TabIndex = 37
@@ -425,7 +388,6 @@ Partial Class HVAC
         Me.Controls.Add(Me.PictureBox2)
         Me.Controls.Add(Me.FanLabel)
         Me.Controls.Add(Me.FanTextBox)
-        Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.OperationTextBox)
         Me.Controls.Add(Me.OperationTextBoxLabel)
         Me.Controls.Add(Me.CurrentTimeLabel)
@@ -439,13 +401,10 @@ Partial Class HVAC
         Me.Controls.Add(Me.ConnectionStatusLabel)
         Me.Controls.Add(Me.PortsComboBox)
         Me.Controls.Add(Me.SetTempTextBox)
-        Me.Controls.Add(Me.SerialTextBox)
         Me.Controls.Add(Me.CurrentTempTextBox)
         Me.Controls.Add(Me.ExitButton)
         Me.Controls.Add(Me.SetButton)
-        Me.Controls.Add(Me.COMButton)
-        Me.Controls.Add(Me.SerialPortComboLabel)
-        Me.Controls.Add(Me.SerialPortsComboBox)
+        Me.Controls.Add(Me.SerialTextBox)
         Me.Name = "HVAC"
         Me.ToolStrip1.ResumeLayout(False)
         Me.ToolStrip1.PerformLayout()
@@ -456,10 +415,7 @@ Partial Class HVAC
     End Sub
 
     Friend WithEvents SerialPort1 As IO.Ports.SerialPort
-    Friend WithEvents SerialPortsComboBox As ComboBox
-    Friend WithEvents SerialPortComboLabel As Label
     Friend WithEvents ReadTimer As Timer
-    Friend WithEvents COMButton As Button
     Friend WithEvents SetButton As Button
     Friend WithEvents ExitButton As Button
     Friend WithEvents CurrentTempTextBox As TextBox
@@ -477,7 +433,6 @@ Partial Class HVAC
     Friend WithEvents CurrentTimeLabel As Label
     Friend WithEvents OperationTextBoxLabel As Label
     Friend WithEvents OperationTextBox As TextBox
-    Friend WithEvents Label1 As Label
     Friend WithEvents FanTextBox As TextBox
     Friend WithEvents FanLabel As Label
     Friend WithEvents PictureBox2 As PictureBox

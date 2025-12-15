@@ -163,7 +163,7 @@ Public Class HVAC
         SerialPort1.Write(data, 0, 1)
     End Sub
 
-    Private Sub COMButton_Click(sender As Object, e As EventArgs) Handles COMButton.Click
+    Private Sub COMButton_Click(sender As Object, e As EventArgs)
         'connect()
         'If SerialPort1.IsOpen Then
         '    write()  ' Send &HF0 handshake
