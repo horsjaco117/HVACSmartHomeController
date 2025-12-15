@@ -42,7 +42,6 @@ Partial Class HVAC
         Me.CurrentTempTextBoxLabel = New System.Windows.Forms.Label()
         Me.DigitalInputsTextBox = New System.Windows.Forms.TextBox()
         Me.DigitalInputTextBoxLabel = New System.Windows.Forms.Label()
-        Me.Label2 = New System.Windows.Forms.Label()
         Me.CurrentTimeTextBox = New System.Windows.Forms.TextBox()
         Me.CurrentTimeLabel = New System.Windows.Forms.Label()
         Me.OperationTextBoxLabel = New System.Windows.Forms.Label()
@@ -64,11 +63,11 @@ Partial Class HVAC
         Me.IncrementLowTempButton = New System.Windows.Forms.Button()
         Me.DecrementHighTempButton = New System.Windows.Forms.Button()
         Me.SafetyTimer = New System.Windows.Forms.Timer(Me.components)
-        Me.PictureBox1 = New System.Windows.Forms.PictureBox()
         Me.PictureBox2 = New System.Windows.Forms.PictureBox()
         Me.SerialTimer = New System.Windows.Forms.Timer(Me.components)
+        Me.ClockTextBox = New System.Windows.Forms.TextBox()
+        Me.ClockLabel = New System.Windows.Forms.Label()
         Me.ToolStrip1.SuspendLayout()
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -115,7 +114,7 @@ Partial Class HVAC
         '
         'ExitButton
         '
-        Me.ExitButton.Location = New System.Drawing.Point(1254, 727)
+        Me.ExitButton.Location = New System.Drawing.Point(807, 512)
         Me.ExitButton.Name = "ExitButton"
         Me.ExitButton.Size = New System.Drawing.Size(210, 87)
         Me.ExitButton.TabIndex = 4
@@ -213,15 +212,6 @@ Partial Class HVAC
         Me.DigitalInputTextBoxLabel.TabIndex = 15
         Me.DigitalInputTextBoxLabel.Text = "Digital Inputs"
         '
-        'Label2
-        '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(1250, 684)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(57, 20)
-        Me.Label2.TabIndex = 16
-        Me.Label2.Text = "Label2"
-        '
         'CurrentTimeTextBox
         '
         Me.CurrentTimeTextBox.Location = New System.Drawing.Point(917, 62)
@@ -301,7 +291,7 @@ Partial Class HVAC
         Me.ToolStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.CommunicationToolStripButton, Me.ExitToolStripButton, Me.SaveSettingsToolStripButton})
         Me.ToolStrip1.Location = New System.Drawing.Point(0, 0)
         Me.ToolStrip1.Name = "ToolStrip1"
-        Me.ToolStrip1.Size = New System.Drawing.Size(1620, 33)
+        Me.ToolStrip1.Size = New System.Drawing.Size(1101, 33)
         Me.ToolStrip1.TabIndex = 28
         Me.ToolStrip1.Text = "ToolStrip1"
         '
@@ -386,16 +376,7 @@ Partial Class HVAC
         '
         'SafetyTimer
         '
-        Me.SafetyTimer.Interval = 3000
-        '
-        'PictureBox1
-        '
-        Me.PictureBox1.Image = Global.HVACSmartHomeController.My.Resources.Resources.fire
-        Me.PictureBox1.Location = New System.Drawing.Point(1070, 52)
-        Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(538, 317)
-        Me.PictureBox1.TabIndex = 35
-        Me.PictureBox1.TabStop = False
+        Me.SafetyTimer.Interval = 30000
         '
         'PictureBox2
         '
@@ -409,12 +390,29 @@ Partial Class HVAC
         'SerialTimer
         '
         '
+        'ClockTextBox
+        '
+        Me.ClockTextBox.Location = New System.Drawing.Point(598, 292)
+        Me.ClockTextBox.Name = "ClockTextBox"
+        Me.ClockTextBox.Size = New System.Drawing.Size(239, 26)
+        Me.ClockTextBox.TabIndex = 36
+        '
+        'ClockLabel
+        '
+        Me.ClockLabel.AutoSize = True
+        Me.ClockLabel.Location = New System.Drawing.Point(598, 265)
+        Me.ClockLabel.Name = "ClockLabel"
+        Me.ClockLabel.Size = New System.Drawing.Size(48, 20)
+        Me.ClockLabel.TabIndex = 37
+        Me.ClockLabel.Text = "Clock"
+        '
         'HVAC
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1620, 884)
-        Me.Controls.Add(Me.PictureBox1)
+        Me.ClientSize = New System.Drawing.Size(1101, 880)
+        Me.Controls.Add(Me.ClockLabel)
+        Me.Controls.Add(Me.ClockTextBox)
         Me.Controls.Add(Me.DecrementHighTempButton)
         Me.Controls.Add(Me.IncrementLowTempButton)
         Me.Controls.Add(Me.DecrementLowTempButton)
@@ -432,7 +430,6 @@ Partial Class HVAC
         Me.Controls.Add(Me.OperationTextBoxLabel)
         Me.Controls.Add(Me.CurrentTimeLabel)
         Me.Controls.Add(Me.CurrentTimeTextBox)
-        Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.DigitalInputTextBoxLabel)
         Me.Controls.Add(Me.DigitalInputsTextBox)
         Me.Controls.Add(Me.CurrentTempTextBoxLabel)
@@ -450,10 +447,8 @@ Partial Class HVAC
         Me.Controls.Add(Me.SerialPortComboLabel)
         Me.Controls.Add(Me.SerialPortsComboBox)
         Me.Name = "HVAC"
-        Me.Text = "HVAC"
         Me.ToolStrip1.ResumeLayout(False)
         Me.ToolStrip1.PerformLayout()
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
@@ -478,7 +473,6 @@ Partial Class HVAC
     Friend WithEvents CurrentTempTextBoxLabel As Label
     Friend WithEvents DigitalInputsTextBox As TextBox
     Friend WithEvents DigitalInputTextBoxLabel As Label
-    Friend WithEvents Label2 As Label
     Friend WithEvents CurrentTimeTextBox As TextBox
     Friend WithEvents CurrentTimeLabel As Label
     Friend WithEvents OperationTextBoxLabel As Label
@@ -501,6 +495,7 @@ Partial Class HVAC
     Friend WithEvents IncrementLowTempButton As Button
     Friend WithEvents DecrementHighTempButton As Button
     Friend WithEvents SafetyTimer As Timer
-    Friend WithEvents PictureBox1 As PictureBox
     Friend WithEvents SerialTimer As Timer
+    Friend WithEvents ClockTextBox As TextBox
+    Friend WithEvents ClockLabel As Label
 End Class

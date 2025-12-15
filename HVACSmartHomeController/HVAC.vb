@@ -60,6 +60,7 @@ Public Class HVAC
     Private WithEvents DetectTimer As New Timer()
     Private previouslyAvailablePorts As New List(Of String)
     Private hardwareVerified As Boolean = False
+    Private Const ERROR_LOG_FILE As String = "errorLog.txt"
 
     'Handshake verification
     Private ReadOnly ExpectedHandshakeResponse As Byte() = {
@@ -213,6 +214,7 @@ Public Class HVAC
         SerialPort1.Write(cmd, 0, 1)
         CurrentTimeTextBox.Text = DateTime.Now.ToString("hh:mm:ss tt")
         ' IsQuietBoard()
+        ClockTextBox.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
     End Sub
     Sub SafetyTimer_Tick(sender As Object, e As EventArgs) Handles SafetyTimer.Tick
         ' Declare local copies to avoid race conditions with rapid serial updates
@@ -283,6 +285,8 @@ Public Class HVAC
     End Sub
 
     Private Sub SerialPort1_ErrorReceived(sender As Object, e As SerialErrorReceivedEventArgs) Handles SerialPort1.ErrorReceived
+        ' Log the communication loss
+        LogError("Connection lost (error detected).")
         Me.Invoke(Sub()
                       If SerialPort1.IsOpen Then
                           Try
@@ -292,7 +296,7 @@ Public Class HVAC
                           End Try
                       End If
                       ConnectionStatusLabel.Text = "Connection lost (error detected)."
-                      SetDefaults()  ' Reset UI and port list
+                      SetDefaults() ' Reset UI and port list
                   End Sub)
     End Sub
 
@@ -334,9 +338,18 @@ Public Class HVAC
                     heatLatched = False
                     coolLatched = False
                     fanLatched = False
+                    ' Log safety interlock event
+                    LogError("Safety interlock pressed")
                     ' Send single byte0x20 to the hardware to signal safety interlock
-
-
+                    Try
+                        If SerialPort1 IsNot Nothing AndAlso SerialPort1.IsOpen Then
+                            Dim data(0) As Byte
+                            data(0) = &H20
+                            send(data)
+                        End If
+                    Catch ex As Exception
+                        ' Ignore serial write errors here (device may have disappeared)
+                    End Try
                 End If
 
                 ' Reset interlock latch on a specific condition (example: falling edge of fan button)
@@ -460,7 +473,7 @@ Public Class HVAC
                     heatOutput = False
                     coolOutput = False
                     Dim data(1) As Byte
-                    data(0) = &H28
+                    data(0) = &H20
                 Else
                     ' Fan control
                     If fanLatched Then
@@ -622,7 +635,7 @@ Public Class HVAC
         ReadTimer.Enabled = True ' Start constant reading
         Me.Font = New Font("Segoe UI", 11, FontStyle.Bold)
         Me.BackColor = Color.FromArgb(244, 121, 32)
-        FilterTimer.Interval = 1000  ' Check every second for hold timing and runtime
+        FilterTimer.Interval = 30000  ' Check every second for hold timing and runtime
         FilterTimer.Enabled = True
         LoadSettings()
         IncrementTemperatureHigh(SetTempTextBox, 0)
@@ -890,6 +903,8 @@ Public Class HVAC
     End Sub
 
     Private Sub TriggerFilterFault()
+        ' Log filter fault
+        LogError("Filter Error Detected: Filter is dirty or input held too long.")
         heatLatched = False
         coolLatched = False
         heatOutput = False
@@ -904,6 +919,21 @@ Public Class HVAC
                       OperationTextBox.BackColor = Color.Orange
                       OperationTextBox.ForeColor = Color.White
                   End Sub)
+    End Sub
+
+    Private Function GetErrorLogPath() As String
+        Return System.IO.Path.Combine(Application.StartupPath, ERROR_LOG_FILE)
+    End Function
+
+    Private Sub LogError(message As String)
+        Try
+            Dim path = GetErrorLogPath()
+            Dim entry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}{Environment.NewLine}"
+            ' Ensure directory exists (Application.StartupPath exists) and append
+            System.IO.File.AppendAllText(path, entry)
+        Catch
+            ' Swallow file IO errors to avoid disrupting main flow
+        End Try
     End Sub
 
     Private Sub SerialTimer_Tick(sender As Object, e As EventArgs) Handles SerialTimer.Tick
